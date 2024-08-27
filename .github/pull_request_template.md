@@ -1,9 +1,9 @@
-🚨 ## Problem
+## 🚨 Problem
 <!-- What problem are you trying to solve? What issue does this close? -->
 
 Closes #
 
-🚀 ## Solution
+## 🚀 Solution
 <!-- How did you solve the problem? -->
 
 ✨ **Features**:
@@ -18,7 +18,7 @@ Closes #
 
 - Details ...
 
-📸 ## Before & After Screenshots
+ ## 📸 Before & After Screenshots
 
 **BEFORE**:
 <!-- [insert screenshot here] -->
@@ -26,10 +26,10 @@ Closes #
 **AFTER**:
 <!-- [insert screenshot here] -->
 
-✅ ## Tests
+## ✅ Tests
 <!-- What tests should be run to confirm functionality? -->
 
-👷 ## Deploy Notes
+## 👷 Deploy Notes
 <!-- Notes regarding deployment of the contained body of work.  -->
 <!-- These should note any new dependencies, new scripts, etc. -->
 
