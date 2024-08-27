@@ -1,2 +1,8 @@
 venv/
 __pycache__/
+
+# temporarily gitignore dataset files fetched from the internet
+data/
+
+# ignore logs
+log/
