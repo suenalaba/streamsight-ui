@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from streamsight.datasets import (AmazonBookDataset, 
@@ -13,7 +13,7 @@ from streamsight.settings import SlidingWindowSetting
 from streamsight.registries.registry import MetricEntry
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 app = FastAPI()
 
@@ -74,3 +74,17 @@ def create_stream(stream: Stream):
     evaluator_stream_object_map[evaluator_streamer_id] = evaluator_streamer
 
     return evaluator_streamer_id
+
+
+@app.get("/get_stream/{evaluator_streamer_id}")
+def get_stream(evaluator_streamer_id: str):
+    try:
+        uuid_obj = UUID(evaluator_streamer_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+
+    evaluator_streamer = evaluator_stream_object_map.get(uuid_obj)
+    if not evaluator_streamer:
+        raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
+
+    return evaluator_streamer

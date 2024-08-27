@@ -6,3 +6,4 @@ data/
 
 # ignore logs
 log/
+LOGGING_CONFIG.yaml
