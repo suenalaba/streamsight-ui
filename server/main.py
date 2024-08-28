@@ -172,7 +172,7 @@ def start_stream(evaluator_streamer_id: str):
 
 
 @app.get("/get_data/{evaluator_streamer_id}/{algorithm_id}")
-def download_data(evaluator_streamer_id: str, algorithm_id: str):
+def get_data(evaluator_streamer_id: str, algorithm_id: str):
     try:
         evaluator_streamer_uuid = UUID(evaluator_streamer_id)
     except ValueError:
@@ -193,6 +193,37 @@ def download_data(evaluator_streamer_id: str, algorithm_id: str):
 
     algo_name = evaluator_streamer.status_registry.get(algorithm_uuid).name
     file_name = f"{algo_name}.csv"
+
+    # Convert DataFrame to CSV
+    csv_buffer = io.StringIO()
+    df.to_csv(csv_buffer, index=False)
+    csv_buffer.seek(0)
+
+    return StreamingResponse(csv_buffer, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename={file_name}"})
+
+
+@app.get("/get_unlabeled_data/{evaluator_streamer_id}/{algorithm_id}")
+def get_unlabeled_data(evaluator_streamer_id: str, algorithm_id: str):
+    try:
+        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+    
+    try:
+        algorithm_uuid = UUID(algorithm_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+
+    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
+    if not evaluator_streamer:
+        raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
+
+    evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
+    interaction_matrix = evaluator_streamer.get_unlabeled_data(algorithm_uuid)
+    df = interaction_matrix.copy_df()
+
+    algo_name = evaluator_streamer.status_registry.get(algorithm_uuid).name
+    file_name = f"{algo_name}_unlabeled.csv"
 
     # Convert DataFrame to CSV
     csv_buffer = io.StringIO()
