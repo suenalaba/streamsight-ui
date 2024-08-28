@@ -129,6 +129,27 @@ def get_all_algorithm_state(evaluator_streamer_id: str):
     algorithm_states = {key: value.name for key, value in evaluator_streamer.get_all_algorithm_status().items()}
     return {"algorithm_states": algorithm_states}
 
+
+@app.post("/start_stream/{evaluator_streamer_id}")
+def start_stream(evaluator_streamer_id: str):
+    try:
+        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+
+    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
+    if not evaluator_streamer:
+        raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
+
+    evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
+
+    try:
+        evaluator_streamer.start_stream()
+        return {"status": True}
+    except Exception as e:
+        return {"status": False, "error": f"Error Starting Stream: {str(e)}"}
+
+
 @app.get("/get_data/{evaluator_streamer_id}/{algorithm_id}")
 def download_data(evaluator_streamer_id: str, algorithm_id: str):
     try:
