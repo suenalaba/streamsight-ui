@@ -191,7 +191,7 @@ def download_data(evaluator_streamer_id: str, algorithm_id: str):
     interaction_matrix = evaluator_streamer.get_data(algorithm_uuid)
     df = interaction_matrix.copy_df()
 
-    algo_name = evaluator_streamer.status_registry.get(evaluator_streamer_uuid).name
+    algo_name = evaluator_streamer.status_registry.get(algorithm_uuid).name
     file_name = f"{algo_name}.csv"
 
     # Convert DataFrame to CSV
