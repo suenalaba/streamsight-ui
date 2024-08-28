@@ -1,6 +1,8 @@
+import io
 from typing import List, Optional, Union, cast
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from streamsight.datasets import (AmazonBookDataset, 
@@ -14,6 +16,7 @@ from streamsight.registries.registry import MetricEntry
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 
 from uuid import UUID, uuid4
+import pandas as pd
 
 app = FastAPI()
 
@@ -125,3 +128,33 @@ def get_all_algorithm_state(evaluator_streamer_id: str):
     evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
     algorithm_states = {key: value.name for key, value in evaluator_streamer.get_all_algorithm_status().items()}
     return {"algorithm_states": algorithm_states}
+
+@app.get("/get_data/{evaluator_streamer_id}/{algorithm_id}")
+def download_data(evaluator_streamer_id: str, algorithm_id: str):
+    try:
+        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+    
+    try:
+        algorithm_uuid = UUID(algorithm_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+
+    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
+    if not evaluator_streamer:
+        raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
+
+    evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
+    interaction_matrix = evaluator_streamer.get_data(algorithm_uuid)
+    df = interaction_matrix.copy_df()
+
+    algo_name = evaluator_streamer.status_registry.get(evaluator_streamer_uuid).name
+    file_name = f"{algo_name}.csv"
+
+    # Convert DataFrame to CSV
+    csv_buffer = io.StringIO()
+    df.to_csv(csv_buffer, index=False)
+    csv_buffer.seek(0)
+
+    return StreamingResponse(csv_buffer, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename={file_name}"})
