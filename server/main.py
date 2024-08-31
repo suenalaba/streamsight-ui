@@ -1,6 +1,6 @@
 import io
 import json
-from typing import List, Optional, Union, cast
+from typing import List, Optional, cast
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
@@ -22,11 +22,6 @@ import pandas as pd
 
 app = FastAPI()
 
-class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: Union[bool, None] = None
-
 class Stream(BaseModel):
     dataset_id: str
     top_k: int
@@ -43,19 +38,10 @@ dataset_map = {
 # stores k:v pair of UUID: EvaluatorStreamer
 evaluator_stream_object_map = {}
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+@app.get("/", tags=["Healthcheck"])
+def healthcheck():
+    return {"Server is running, STATUS": "HEALTHY"}
 
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-
-
-@app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    return {"item_name": item.name, "item_id": item_id}
 
 @app.post("/streams", tags=["Stream Management"])
 def create_stream(stream: Stream):
