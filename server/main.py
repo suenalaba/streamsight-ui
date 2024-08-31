@@ -1,3 +1,4 @@
+from enum import Enum
 import io
 import json
 from typing import List, Optional, cast
@@ -22,10 +23,15 @@ import pandas as pd
 
 app = FastAPI()
 
+class Metric(str, Enum):
+    PrecisionK = "PrecisionK"
+    RecallK = "RecallK"
+    DCGK = "DCGK"
+
 class Stream(BaseModel):
     dataset_id: str
     top_k: int
-    metrics: List[str]
+    metrics: List[Metric]
 
 dataset_map = {
     'amazon_music': AmazonMusicDataset,
@@ -45,26 +51,42 @@ def healthcheck():
 
 @app.post("/streams", tags=["Stream Management"])
 def create_stream(stream: Stream):
-    dataset = dataset_map[stream.dataset_id]()
-    data = dataset.load()
+    try:
+        dataset = dataset_map[stream.dataset_id]()
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Invalid Dataset ID")
 
-    setting_sliding = SlidingWindowSetting(
-        background_t=1406851200,
-        window_size=60 * 60 * 24 * 300, # day times N
-        n_seq_data=3,
-        top_K=stream.top_k,
-    )
-    setting_sliding.split(data)
+    try:
+        data = dataset.load()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading dataset: {str(e)}")
 
-    metrics = []
-    for metric in stream.metrics:
-        metrics.append(MetricEntry(metric, K=stream.top_k))
+    try:
+        setting_sliding = SlidingWindowSetting(
+            background_t=1406851200,
+            window_size=60 * 60 * 24 * 300,  # day times N
+            n_seq_data=3,
+            top_K=stream.top_k,
+        )
+        setting_sliding.split(data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error setting up sliding window: {str(e)}")
 
-    evaluator_streamer = EvaluatorStreamer(metrics, setting_sliding)
-    evaluator_streamer_id = uuid4()
-    evaluator_stream_object_map[evaluator_streamer_id] = evaluator_streamer
+    try:
+        metrics = []
+        for metric in stream.metrics:
+            metrics.append(MetricEntry(metric, K=stream.top_k))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating metrics: {str(e)}")
 
-    return evaluator_streamer_id
+    try:
+        evaluator_streamer = EvaluatorStreamer(metrics, setting_sliding)
+        stream_id = uuid4()
+        evaluator_stream_object_map[stream_id] = evaluator_streamer
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating evaluator streamer: {str(e)}")
+
+    return {"evaluator_stream_id": stream_id}
 
 
 @app.get("/streams/{stream_id}", tags=["Stream Management"])
