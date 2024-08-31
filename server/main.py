@@ -57,7 +57,7 @@ def read_item(item_id: int, q: Union[str, None] = None):
 def update_item(item_id: int, item: Item):
     return {"item_name": item.name, "item_id": item_id}
 
-@app.post("/create-stream")
+@app.post("/streams", tags=["Stream Management"])
 def create_stream(stream: Stream):
     dataset = dataset_map[stream.dataset_id]()
     data = dataset.load()
@@ -81,10 +81,10 @@ def create_stream(stream: Stream):
     return evaluator_streamer_id
 
 
-@app.get("/get_stream/{evaluator_streamer_id}")
-def get_stream(evaluator_streamer_id: str):
+@app.get("/streams/{stream_id}", tags=["Stream Management"])
+def get_stream(stream_id: str):
     try:
-        uuid_obj = UUID(evaluator_streamer_id)
+        uuid_obj = UUID(stream_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
 
@@ -95,14 +95,34 @@ def get_stream(evaluator_streamer_id: str):
     return evaluator_streamer
 
 
+@app.post("/streams/{stream_id}/start", tags=["Stream Management"])
+def start_stream(stream_id: str):
+    try:
+        evaluator_streamer_uuid = UUID(stream_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+
+    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
+    if not evaluator_streamer:
+        raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
+
+    evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
+
+    try:
+        evaluator_streamer.start_stream()
+        return {"status": True}
+    except Exception as e:
+        return {"status": False, "error": f"Error Starting Stream: {str(e)}"}
+    
+
 class AlgorithmRegistrationRequest(BaseModel):
     algorithm_name: str
 
-@app.post("/register_algorithm/{evaluator_streamer_id}")
-def register_algorithm(evaluator_streamer_id: str, request: AlgorithmRegistrationRequest):
+@app.post("/streams/{stream_id}/algorithms", tags=["Algorithm Management"])
+def register_algorithm(stream_id: str, request: AlgorithmRegistrationRequest):
 
     try:
-        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
+        evaluator_streamer_uuid = UUID(stream_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
 
@@ -116,10 +136,10 @@ def register_algorithm(evaluator_streamer_id: str, request: AlgorithmRegistratio
     return {"algorithm_uuid": str(algorithm_uuid)}
 
 
-@app.get("/get_algorithm_state/{evaluator_streamer_id}/{algorithm_id}")
-def get_algorithm_state(evaluator_streamer_id: str, algorithm_id: str):
+@app.get("/streams/{stream_id}/algorithms/{algorithm_id}/state", tags=["Algorithm Management"])
+def get_algorithm_state(stream_id: str, algorithm_id: str):
     try:
-        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
+        evaluator_streamer_uuid = UUID(stream_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
     
@@ -137,10 +157,10 @@ def get_algorithm_state(evaluator_streamer_id: str, algorithm_id: str):
     return {"algorithm_state": algorithm_state}
 
 
-@app.get("/get_algorithm_state/{evaluator_streamer_id}")
-def get_all_algorithm_state(evaluator_streamer_id: str):
+@app.get("/streams/{stream_id}/algorithms/state", tags=["Algorithm Management"])
+def get_all_algorithm_state(stream_id: str):
     try:
-        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
+        evaluator_streamer_uuid = UUID(stream_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
 
@@ -153,30 +173,10 @@ def get_all_algorithm_state(evaluator_streamer_id: str):
     return {"algorithm_states": algorithm_states}
 
 
-@app.post("/start_stream/{evaluator_streamer_id}")
-def start_stream(evaluator_streamer_id: str):
+@app.get("/streams/{stream_id}/algorithms/{algorithm_id}/training-data", tags=["Data Handling"])
+def get_training_data(stream_id: str, algorithm_id: str):
     try:
-        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid UUID format")
-
-    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
-    if not evaluator_streamer:
-        raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
-
-    evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
-
-    try:
-        evaluator_streamer.start_stream()
-        return {"status": True}
-    except Exception as e:
-        return {"status": False, "error": f"Error Starting Stream: {str(e)}"}
-
-
-@app.get("/get_data/{evaluator_streamer_id}/{algorithm_id}")
-def get_data(evaluator_streamer_id: str, algorithm_id: str):
-    try:
-        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
+        evaluator_streamer_uuid = UUID(stream_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
     
@@ -204,10 +204,10 @@ def get_data(evaluator_streamer_id: str, algorithm_id: str):
     return StreamingResponse(csv_buffer, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename={file_name}"})
 
 
-@app.get("/get_unlabeled_data/{evaluator_streamer_id}/{algorithm_id}")
-def get_unlabeled_data(evaluator_streamer_id: str, algorithm_id: str):
+@app.get("/streams/{stream_id}/algorithms/{algorithm_id}/unlabeled-data", tags=["Data Handling"])
+def get_unlabeled_data(stream_id: str, algorithm_id: str):
     try:
-        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
+        evaluator_streamer_uuid = UUID(stream_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
     
@@ -235,10 +235,10 @@ def get_unlabeled_data(evaluator_streamer_id: str, algorithm_id: str):
     return StreamingResponse(csv_buffer, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename={file_name}"})
 
 
-@app.post("/submit_prediction/{evaluator_streamer_id}/{algorithm_id}")
-async def submit_prediction(evaluator_streamer_id: str, algorithm_id: str, file: UploadFile = File(...)):
+@app.post("/streams/{stream_id}/algorithms/{algorithm_id}/predictions", tags=["Predictions"])
+async def submit_prediction(stream_id: str, algorithm_id: str, file: UploadFile = File(...)):
     try:
-        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
+        evaluator_streamer_uuid = UUID(stream_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
     
@@ -276,10 +276,10 @@ async def submit_prediction(evaluator_streamer_id: str, algorithm_id: str, file:
         return {"status": False, "error": f"Error Submitting Prediction: {str(e)}"}
 
 
-@app.get("/get_metrics/{evaluator_streamer_id}")
-def get_metrics(evaluator_streamer_id: str):
+@app.get("/streams/{stream_id}/metrics", tags=["Metrics"])
+def get_metrics(stream_id: str):
     try:
-        evaluator_streamer_uuid = UUID(evaluator_streamer_id)
+        evaluator_streamer_uuid = UUID(stream_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
 
