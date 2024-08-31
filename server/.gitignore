@@ -1,5 +1,6 @@
 venv/
 __pycache__/
+.pytest_cache/
 
 # temporarily gitignore dataset files fetched from the internet
 data/
