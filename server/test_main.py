@@ -6,7 +6,6 @@ from main import app
 
 client = TestClient(app)
 
-
 def test_healthcheck():
     response = client.get("/")
     assert response.status_code == 200
@@ -37,10 +36,10 @@ def invalid_metric_stream():
     }
 
 def test_create_stream_valid(valid_stream):
-      with patch("main.dataset_map") as mock_dataset_map, \
-            patch("main.SlidingWindowSetting") as mock_sliding_window_setting, \
-            patch("main.MetricEntry") as mock_metric_entry, \
-            patch("main.EvaluatorStreamer") as mock_evaluator_streamer:
+      with patch("routers.stream_management.dataset_map") as mock_dataset_map, \
+            patch("routers.stream_management.SlidingWindowSetting") as mock_sliding_window_setting, \
+            patch("routers.stream_management.MetricEntry") as mock_metric_entry, \
+            patch("routers.stream_management.EvaluatorStreamer") as mock_evaluator_streamer:
 
           # mock sliding window setting
           mock_sliding_window_instance = MagicMock()
@@ -87,7 +86,7 @@ def test_create_stream_invalid_metric(invalid_metric_stream):
     assert response.json()['detail'][0]['msg'] == "Input should be 'PrecisionK', 'RecallK' or 'DCGK'"
 
 def test_create_stream_error_loading_dataset(valid_stream):
-    with patch("main.dataset_map") as mock_dataset_map:
+    with patch("routers.stream_management.dataset_map") as mock_dataset_map:
       mock_dataset_map.__getitem__().return_value.load.side_effect = Exception("Load error")
 
       response = client.post("/streams", json=valid_stream)
@@ -99,8 +98,8 @@ def test_create_stream_error_loading_dataset(valid_stream):
       assert response.json() == {"detail": "Error loading dataset: Load error"}
 
 def test_create_stream_error_setting_sliding_window(valid_stream):
-    with patch("main.dataset_map") as mock_dataset_map, \
-         patch("main.SlidingWindowSetting", side_effect=Exception("Sliding window error")):
+    with patch("routers.stream_management.dataset_map") as mock_dataset_map, \
+         patch("routers.stream_management.SlidingWindowSetting", side_effect=Exception("Sliding window error")):
 
         response = client.post("/streams", json=valid_stream)
 
@@ -110,9 +109,9 @@ def test_create_stream_error_setting_sliding_window(valid_stream):
         assert response.json() == {"detail": "Error setting up sliding window: Sliding window error"}
 
 def test_create_stream_error_creating_metrics(valid_stream):
-    with patch("main.dataset_map") as mock_dataset_map, \
-         patch("main.SlidingWindowSetting") as mock_sliding_window_setting, \
-         patch("main.MetricEntry", side_effect=Exception("Metrics error")):
+    with patch("routers.stream_management.dataset_map") as mock_dataset_map, \
+         patch("routers.stream_management.SlidingWindowSetting") as mock_sliding_window_setting, \
+         patch("routers.stream_management.MetricEntry", side_effect=Exception("Metrics error")):
 
         response = client.post("/streams", json=valid_stream)
 
@@ -123,10 +122,10 @@ def test_create_stream_error_creating_metrics(valid_stream):
         assert response.json() == {"detail": "Error creating metrics: Metrics error"}
 
 def test_create_stream_error_creating_evaluator_streamer(valid_stream):
-    with patch("main.dataset_map") as mock_dataset_map, \
-         patch("main.SlidingWindowSetting") as mock_sliding_window_setting, \
-         patch("main.MetricEntry") as mock_metric_entry, \
-         patch("main.EvaluatorStreamer", side_effect=Exception("Evaluator streamer error")):
+    with patch("routers.stream_management.dataset_map") as mock_dataset_map, \
+         patch("routers.stream_management.SlidingWindowSetting") as mock_sliding_window_setting, \
+         patch("routers.stream_management.MetricEntry") as mock_metric_entry, \
+         patch("routers.stream_management.EvaluatorStreamer", side_effect=Exception("Evaluator streamer error")):
 
         response = client.post("/streams", json=valid_stream)
 
