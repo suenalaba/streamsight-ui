@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import algorithm_management, data_handling, metrics, predictions,  stream_management
+from src.routers import algorithm_management, data_handling, metrics, predictions,  stream_management
 
 app = FastAPI()
 

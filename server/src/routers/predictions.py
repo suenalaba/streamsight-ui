@@ -5,7 +5,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 import pandas as pd
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 from streamsight.algorithms import ItemKNNStatic
-from constants import evaluator_stream_object_map
+from src.constants import evaluator_stream_object_map
 
 router = APIRouter(
   tags=["Predictions"]
