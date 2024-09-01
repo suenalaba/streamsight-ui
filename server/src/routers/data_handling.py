@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
-from constants import evaluator_stream_object_map
+from src.constants import evaluator_stream_object_map
 
 router = APIRouter(
   tags=["Data Handling"]

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
-from constants import evaluator_stream_object_map
+from src.constants import evaluator_stream_object_map
 
 router = APIRouter(
   tags=["Algorithm Management"]

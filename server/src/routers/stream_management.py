@@ -11,7 +11,7 @@ from streamsight.datasets import (AmazonBookDataset,
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 from streamsight.settings import SlidingWindowSetting
 from streamsight.registries.registry import MetricEntry
-from constants import evaluator_stream_object_map
+from src.constants import evaluator_stream_object_map
 
 router = APIRouter(
   tags=["Stream Management"]
