@@ -1,8 +1,10 @@
+from uuid import UUID
 import pytest
 from unittest.mock import call, patch, MagicMock
 from fastapi.testclient import TestClient
 
 from src.main import app
+from src.constants import evaluator_stream_object_map
 
 client = TestClient(app)
 
@@ -130,3 +132,55 @@ def test_create_stream_error_creating_evaluator_streamer(valid_stream):
   
         assert response.status_code == 500
         assert response.json() == {"detail": "Error creating evaluator streamer: Evaluator streamer error"}
+
+def test_start_stream_valid():
+    mock_evaluator_streamer_instance = MagicMock()
+    mock_evaluator_streamer_instance.start_stream.return_value = ''
+
+    evaluator_stream_object_map[UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")] = mock_evaluator_streamer_instance
+
+    response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
+    
+    assert mock_evaluator_streamer_instance.start_stream.call_count == 1
+    assert response.status_code == 200
+    assert response.json() == {"status": True}
+
+    evaluator_stream_object_map.clear()
+
+def test_start_stream_invalid_uuid():
+    response = client.post("/streams/invalid_uuid/start")
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid UUID format"}
+
+def test_start_stream_stream_not_found():
+    response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "EvaluatorStreamer not found"}
+
+def test_start_stream_that_has_already_started():
+    mock_evaluator_streamer_instance = MagicMock()
+    mock_evaluator_streamer_instance.start_stream.side_effect = ValueError("Cannot start the stream again")
+
+    evaluator_stream_object_map[UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")] = mock_evaluator_streamer_instance
+
+    response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
+    
+    assert mock_evaluator_streamer_instance.start_stream.call_count == 1
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Error Starting Stream: Cannot start the stream again"}
+
+    evaluator_stream_object_map.clear()
+
+def test_start_stream_error():
+    mock_evaluator_streamer_instance = MagicMock()
+    mock_evaluator_streamer_instance.start_stream.side_effect = Exception("Stream starting error")
+
+    evaluator_stream_object_map[UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")] = mock_evaluator_streamer_instance
+
+    response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
+    
+    assert mock_evaluator_streamer_instance.start_stream.call_count == 1
+    assert response.status_code == 500
+    assert response.json() == {"detail": "Error Starting Stream: Stream starting error"}
+
+    evaluator_stream_object_map.clear()
