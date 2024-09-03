@@ -33,5 +33,5 @@ pytest
 
 * To run test and include Verbose:
 ```
-pytest -s
+pytest -s -vv
 ```
