@@ -105,5 +105,7 @@ def start_stream(stream_id: str):
     try:
         evaluator_streamer.start_stream()
         return {"status": True}
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=f"Error Starting Stream: {str(e)}")
     except Exception as e:
-        return {"status": False, "error": f"Error Starting Stream: {str(e)}"}
+        raise HTTPException(status_code=500, detail=f"Error Starting Stream: {str(e)}")
