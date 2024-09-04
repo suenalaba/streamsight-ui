@@ -66,7 +66,8 @@ def test_create_stream_valid(valid_stream):
 
           mock_evaluator_streamer.assert_called_once_with(
             ['PrecisionK', 'RecallK'],
-            mock_sliding_window_instance
+            mock_sliding_window_instance,
+            10
           )
 
           assert response.status_code == 200

@@ -66,7 +66,7 @@ def create_stream(stream: Stream):
         raise HTTPException(status_code=500, detail=f"Error creating metrics: {str(e)}")
 
     try:
-        evaluator_streamer = EvaluatorStreamer(metrics, setting_sliding)
+        evaluator_streamer = EvaluatorStreamer(metrics, setting_sliding, stream.top_k)
         stream_id = uuid4()
         evaluator_stream_object_map[stream_id] = evaluator_streamer
     except Exception as e:
