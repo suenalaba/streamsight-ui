@@ -14,6 +14,16 @@ def mock_evaluator_streamer():
     mock = MagicMock()
     mock.register_algorithm.return_value = UUID("12345678-1234-5678-1234-567812345678")
     mock.get_algorithm_state.return_value.name = "NEW"
+    
+    mock_algorithm_new = MagicMock()
+    mock_algorithm_new.name = "NEW"
+    mock_algorithm_completed = MagicMock()
+    mock_algorithm_completed.name = "COMPLETED"
+    mock.get_all_algorithm_status.return_value = {
+        UUID("12345678-1234-5678-1234-567812345678"): mock_algorithm_new,
+        UUID("87654321-4321-8765-4321-876543218765"): mock_algorithm_completed
+    }
+
     return mock
 
 def test_register_algorithm_valid(mock_evaluator_streamer):
@@ -115,3 +125,52 @@ def test_get_algorithm_state_internal_error(mock_evaluator_streamer):
         
         assert response.status_code == 500
         assert response.json() == {"detail": "Error getting algorithm state: Internal error"}
+
+
+def test_get_all_algorithm_state_valid(mock_evaluator_streamer):
+    with patch.dict(evaluator_stream_object_map, {UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"): mock_evaluator_streamer}):
+        response = client.get(
+            "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/state"
+        )
+
+        mock_evaluator_streamer.get_all_algorithm_status.assert_called_once()
+        
+        assert response.status_code == 200
+        assert response.json() == {
+            "algorithm_states": {
+                "12345678-1234-5678-1234-567812345678": "NEW",
+                "87654321-4321-8765-4321-876543218765": "COMPLETED"
+            }
+        }
+
+def test_get_all_algorithm_state_invalid_stream_id(mock_evaluator_streamer):
+    response = client.get(
+        "/streams/invalid-uuid/algorithms/state"
+    )
+
+    mock_evaluator_streamer.get_all_algorithm_status.assert_not_called()
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid Stream UUID format"}
+
+def test_get_all_algorithm_state_evaluator_not_found(mock_evaluator_streamer):
+    response = client.get(
+        "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/state"
+    )
+    
+    mock_evaluator_streamer.get_all_algorithm_status.assert_not_called()
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "EvaluatorStreamer not found"}
+
+def test_get_all_algorithm_state_internal_error(mock_evaluator_streamer):
+    mock_evaluator_streamer.get_all_algorithm_status.side_effect = Exception("Internal error")
+    with patch.dict(evaluator_stream_object_map, {UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"): mock_evaluator_streamer}):
+        response = client.get(
+            "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/state"
+        )
+
+        mock_evaluator_streamer.get_all_algorithm_status.assert_called_once()
+
+        assert response.status_code == 500
+        assert response.json() == {"detail": "Error getting all algorithm states: Internal error"}
