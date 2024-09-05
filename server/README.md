@@ -35,3 +35,17 @@ pytest
 ```
 pytest -s -vv
 ```
+* To obtain test coverage:
+1. To compile coverage, run:
+```
+coverage run -m pytest
+```
+2. To get report in terminal, run:
+```
+coverage report -m
+```
+3. To get a more comprehensive report, run:
+```
+coverage html
+```
+and open htmlcov/index.html in a web browser.

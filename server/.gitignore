@@ -8,3 +8,8 @@ data/
 # ignore logs
 log/
 LOGGING_CONFIG.yaml
+
+# ignore generated test reports
+htmlcov/
+.coverage
+.DS_Store
