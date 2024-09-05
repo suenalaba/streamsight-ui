@@ -3,9 +3,8 @@ from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, patch
 from uuid import UUID
 
-from src.main import app  # Assuming your FastAPI app is defined in main.py
-from src.routers.algorithm_management import register_algorithm, evaluator_stream_object_map
-from src.routers.algorithm_management import AlgorithmRegistrationRequest
+from src.main import app
+from src.routers.algorithm_management import evaluator_stream_object_map
 
 client = TestClient(app)
 
