@@ -25,7 +25,11 @@ def register_algorithm(stream_id: str, request: AlgorithmRegistrationRequest):
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
     evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
-    algorithm_uuid = evaluator_streamer.register_algorithm(algorithm_name=request.algorithm_name)
+
+    try:
+        algorithm_uuid = evaluator_streamer.register_algorithm(algorithm_name=request.algorithm_name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error registering algorithm: {str(e)}")
 
     return {"algorithm_uuid": str(algorithm_uuid)}
 

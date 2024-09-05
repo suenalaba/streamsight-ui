@@ -47,4 +47,17 @@ def test_register_algorithm_evaluator_not_found(mock_evaluator_streamer):
     
     assert response.status_code == 404
     assert response.json() == {"detail": "EvaluatorStreamer not found"}
-  
+
+def test_register_algorithm_internal_error(mock_evaluator_streamer):
+    mock_evaluator_streamer.register_algorithm.side_effect = Exception("Internal error")
+    with patch.dict(evaluator_stream_object_map, {UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"): mock_evaluator_streamer}):
+        response = client.post(
+            "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms",
+            json={"algorithm_name": "test_algorithm"}
+        )
+        
+        mock_evaluator_streamer.register_algorithm.assert_called_once_with(algorithm_name="test_algorithm")
+ 
+        assert response.status_code == 500
+        assert response.json() == {"detail": "Error registering algorithm: Internal error"}
+      
