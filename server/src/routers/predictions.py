@@ -36,7 +36,8 @@ async def submit_prediction(stream_id: str, algorithm_id: str, file: UploadFile 
 
         # Ensure the DataFrame has the required columns
         required_columns = {"interactionid", "uid", "iid", "ts"}
-        if not required_columns.issubset(df.columns):
+
+        if set(required_columns) != set(df.columns):
             raise HTTPException(status_code=400, detail="CSV file is missing required columns")
 
         # TODO: remove this block once https://github.com/HiIAmTzeKean/Streamsight/issues/75 is resolved
@@ -49,5 +50,6 @@ async def submit_prediction(stream_id: str, algorithm_id: str, file: UploadFile 
         # evaluator_streamer.submit_prediction(algorithm_uuid, df)
         return {"status": True}
     except Exception as e:
-        return {"status": False, "error": f"Error Submitting Prediction: {str(e)}"}
-
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Error Submitting Prediction: {str(e)}")
