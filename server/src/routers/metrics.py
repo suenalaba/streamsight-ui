@@ -29,14 +29,13 @@ def get_metrics(stream_id: str):
         micro_json = micro_metrics.to_json()
         macro_json = macro_metrics.to_json()
 
-        # Combine both JSON strings into a dictionary
         metrics_dict = {
             "micro_metrics": json.loads(micro_json),
             "macro_metrics": json.loads(macro_json)
         }
 
-        # Convert the dictionary to a JSON string to send to the frontend
         metrics_json = json.dumps(metrics_dict)
         return metrics_json
     except Exception as e:
-        return {"status": False, "error": f"Error Getting Metrics: {str(e)}"}
+        raise HTTPException(status_code=500, detail=f"Error Getting Metrics: {str(e)}")
+    
