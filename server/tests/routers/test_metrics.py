@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, call, patch
 from uuid import UUID
 
-from src.main import app  # Assuming your FastAPI app is defined in main.py
+from src.main import app
 from src.constants import evaluator_stream_object_map
 
 client = TestClient(app)
@@ -53,11 +53,12 @@ def test_get_metrics_evaluator_not_found(mock_evaluator_streamer):
 def test_get_metrics_internal_error(mock_evaluator_streamer):
     # first call to metric_results throws an error
     mock_evaluator_streamer.metric_results.side_effect = Exception("Internal error")
+    
     with patch.dict(evaluator_stream_object_map, {UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"): mock_evaluator_streamer}):
         response = client.get(
             "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/metrics"
         )
-        
+
         assert mock_evaluator_streamer.metric_results.call_count == 1
         mock_evaluator_streamer.metric_results.assert_called_once_with("micro")
         
