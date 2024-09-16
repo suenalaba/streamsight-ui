@@ -40,7 +40,7 @@ async def submit_prediction(stream_id: str, algorithm_id: str, records: List[Dat
     try:
         prediction_data = [record.model_dump() for record in records]
         prediction_df = pd.DataFrame(prediction_data)
-        prediction_im = InteractionMatrix(prediction_df)
+        prediction_im = InteractionMatrix(prediction_df, item_ix='iid', user_ix='uid', timestamp_ix='ts')
         evaluator_streamer.submit_prediction(algorithm_uuid, prediction_im)
         assert evaluator_streamer.get_algorithm_state(algorithm_uuid).name == "PREDICTED"
     except Exception as e:
