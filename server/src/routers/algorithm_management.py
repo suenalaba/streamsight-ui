@@ -80,7 +80,7 @@ def get_all_algorithm_state(stream_id: str):
     
     return {"algorithm_states": algorithm_states}
 
-@router.get("streams/{stream_id}/algorithms/{algorithm_id}/is-completed")
+@router.get("/streams/{stream_id}/algorithms/{algorithm_id}/is-completed")
 def is_algorithm_streaming_completed(stream_id: str, algorithm_id: str):
     try:
         evaluator_streamer_uuid = UUID(stream_id)
