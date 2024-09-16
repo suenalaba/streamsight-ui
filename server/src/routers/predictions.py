@@ -1,18 +1,26 @@
 import io
-from typing import Optional, cast
+from typing import List, Optional, cast
 from uuid import UUID
 from fastapi import APIRouter, File, HTTPException, UploadFile
 import pandas as pd
+from pydantic import BaseModel, Field
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 from streamsight.algorithms import ItemKNNStatic
+from streamsight.matrix import InteractionMatrix
 from src.constants import evaluator_stream_object_map
 
 router = APIRouter(
   tags=["Predictions"]
 )
 
+class DataframeRecord(BaseModel):
+    interactionid: int = Field(..., description="The ID of the interaction, required.")
+    uid: int = Field(..., description="The user ID, required.")
+    iid: int = Field(..., description="The item ID, required.")
+    ts: int = Field(..., description="The timestamp of the interaction, required.")
+
 @router.post("/streams/{stream_id}/algorithms/{algorithm_id}/predictions")
-async def submit_prediction(stream_id: str, algorithm_id: str, file: UploadFile = File(...)):
+async def submit_prediction(stream_id: str, algorithm_id: str, records: List[DataframeRecord]):
     try:
         evaluator_streamer_uuid = UUID(stream_id)
     except ValueError:
@@ -30,26 +38,12 @@ async def submit_prediction(stream_id: str, algorithm_id: str, file: UploadFile 
     evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
 
     try:
-        # Read the uploaded CSV file into a pandas DataFrame
-        contents = await file.read()
-        df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
-
-        # Ensure the DataFrame has the required columns
-        required_columns = {"interactionid", "uid", "iid", "ts"}
-
-        if set(required_columns) != set(df.columns):
-            raise HTTPException(status_code=400, detail="CSV file is missing required columns")
-
-        # TODO: remove this block once https://github.com/HiIAmTzeKean/Streamsight/issues/75 is resolved
-        algorithm = ItemKNNStatic()
-        algorithm.fit(evaluator_streamer.get_data(algorithm_uuid))
-        predictions = algorithm.predict(evaluator_streamer.get_unlabeled_data(algorithm_uuid))
-        evaluator_streamer.submit_prediction(algorithm_uuid, predictions)
-
+        prediction_data = [record.model_dump() for record in records]
+        prediction_df = pd.DataFrame(prediction_data)
+        prediction_im = InteractionMatrix(prediction_df)
+        evaluator_streamer.submit_prediction(algorithm_uuid, prediction_im)
         assert evaluator_streamer.get_algorithm_state(algorithm_uuid).name == "PREDICTED"
-        # evaluator_streamer.submit_prediction(algorithm_uuid, df)
-        return {"status": True}
     except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
         raise HTTPException(status_code=500, detail=f"Error Submitting Prediction: {str(e)}")
+    
+    return {"status": True}
