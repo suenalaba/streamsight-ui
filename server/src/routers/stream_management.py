@@ -36,6 +36,9 @@ class Stream(BaseModel):
     dataset_id: str
     top_k: int
     metrics: List[Metric]
+    background_t: int
+    window_size: int
+    n_seq_data: int
 
 @router.post("/streams")
 def create_stream(stream: Stream):
@@ -51,7 +54,9 @@ def create_stream(stream: Stream):
 
     try:
         setting_sliding = SlidingWindowSetting(
-            4,3,1,
+            background_t=stream.background_t,
+            window_size=stream.window_size,
+            n_seq_data=stream.n_seq_data,
             # background_t=1406851200,
             # window_size=60 * 60 * 24 * 300,  # day times N
             # n_seq_data=3,
