@@ -27,18 +27,16 @@ def get_training_data(stream_id: str, algorithm_id: str):
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
     evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
-    interaction_matrix = evaluator_streamer.get_data(algorithm_uuid)
-    df = interaction_matrix.copy_df()
+    
+    try:
+        interaction_matrix = evaluator_streamer.get_data(algorithm_uuid)
+        shape = interaction_matrix.shape
+        df = interaction_matrix.copy_df()
+        df_json = df.to_dict(orient='records')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error Getting Training Data: {str(e)}")
 
-    algo_name = evaluator_streamer.status_registry.get(algorithm_uuid).name
-    file_name = f"{algo_name}.csv"
-
-    # Convert DataFrame to CSV
-    csv_buffer = io.StringIO()
-    df.to_csv(csv_buffer, index=False)
-    csv_buffer.seek(0)
-
-    return StreamingResponse(csv_buffer, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename={file_name}"})
+    return {"shape": shape, "training_data": df_json}
 
 
 @router.get("/streams/{stream_id}/algorithms/{algorithm_id}/unlabeled-data")
@@ -58,15 +56,13 @@ def get_unlabeled_data(stream_id: str, algorithm_id: str):
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
     evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
-    interaction_matrix = evaluator_streamer.get_unlabeled_data(algorithm_uuid)
-    df = interaction_matrix.copy_df()
+    
+    try:
+        interaction_matrix = evaluator_streamer.get_data(algorithm_uuid)
+        shape = interaction_matrix.shape
+        df = interaction_matrix.copy_df()
+        df_json = df.to_dict(orient='records')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error Getting Training Data: {str(e)}")
 
-    algo_name = evaluator_streamer.status_registry.get(algorithm_uuid).name
-    file_name = f"{algo_name}_unlabeled.csv"
-
-    # Convert DataFrame to CSV
-    csv_buffer = io.StringIO()
-    df.to_csv(csv_buffer, index=False)
-    csv_buffer.seek(0)
-
-    return StreamingResponse(csv_buffer, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename={file_name}"})
+    return {"shape": shape, "unlabeled_data": df_json}
