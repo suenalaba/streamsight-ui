@@ -7,7 +7,8 @@ from streamsight.datasets import (AmazonBookDataset,
                                   AmazonComputerDataset, 
                                   AmazonMovieDataset, 
                                   AmazonMusicDataset, 
-                                  YelpDataset)
+                                  YelpDataset,
+                                  TestDataset)
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 from streamsight.settings import SlidingWindowSetting
 from streamsight.registries.registry import MetricEntry
@@ -22,7 +23,8 @@ dataset_map = {
     'amazon_book': AmazonBookDataset,
     'amazon_computer': AmazonComputerDataset,
     'amazon_movie': AmazonMovieDataset,
-    'yelp': YelpDataset
+    'yelp': YelpDataset,
+    'test': TestDataset
 }
 
 class Metric(str, Enum):
@@ -49,9 +51,10 @@ def create_stream(stream: Stream):
 
     try:
         setting_sliding = SlidingWindowSetting(
-            background_t=1406851200,
-            window_size=60 * 60 * 24 * 300,  # day times N
-            n_seq_data=3,
+            4,3,1,
+            # background_t=1406851200,
+            # window_size=60 * 60 * 24 * 300,  # day times N
+            # n_seq_data=3,
             top_K=stream.top_k,
         )
         setting_sliding.split(data)
