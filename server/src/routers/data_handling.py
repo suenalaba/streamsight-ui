@@ -58,7 +58,7 @@ def get_unlabeled_data(stream_id: str, algorithm_id: str):
     evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
     
     try:
-        interaction_matrix = evaluator_streamer.get_data(algorithm_uuid)
+        interaction_matrix = evaluator_streamer.get_unlabeled_data(algorithm_uuid)
         shape = interaction_matrix.shape
         df = interaction_matrix.copy_df()
         df_json = df.to_dict(orient='records')
