@@ -1,10 +1,9 @@
-import io
-from typing import Optional, cast
+from typing import cast
 from uuid import UUID
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
-from src.constants import evaluator_stream_object_map
+
+from src.db_utils import get_evaluator_stream_from_db, update_evaluator_stream
 
 router = APIRouter(
   tags=["Data Handling"]
@@ -21,8 +20,11 @@ def get_training_data(stream_id: str, algorithm_id: str):
         algorithm_uuid = UUID(algorithm_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
-
-    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
+    
+    try:
+        evaluator_streamer = get_evaluator_stream_from_db(evaluator_streamer_uuid)
+    except:
+        raise HTTPException(status_code=500, detail="Error Getting Stream")
     if not evaluator_streamer:
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
@@ -33,6 +35,7 @@ def get_training_data(stream_id: str, algorithm_id: str):
         shape = interaction_matrix.shape
         df = interaction_matrix.copy_df()
         df_json = df.to_dict(orient='records')
+        update_evaluator_stream(evaluator_streamer_uuid, evaluator_streamer)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error Getting Training Data: {str(e)}")
 
@@ -50,8 +53,13 @@ def get_unlabeled_data(stream_id: str, algorithm_id: str):
         algorithm_uuid = UUID(algorithm_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
+    
+    try:
+        evaluator_streamer = get_evaluator_stream_from_db(evaluator_streamer_uuid)
 
-    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
+    except:
+        raise HTTPException(status_code=500, detail="Error Getting Stream")
+    
     if not evaluator_streamer:
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
@@ -62,6 +70,8 @@ def get_unlabeled_data(stream_id: str, algorithm_id: str):
         shape = interaction_matrix.shape
         df = interaction_matrix.copy_df()
         df_json = df.to_dict(orient='records')
+
+        update_evaluator_stream(evaluator_streamer_uuid, evaluator_streamer)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error Getting Training Data: {str(e)}")
 
