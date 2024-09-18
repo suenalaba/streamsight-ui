@@ -1,9 +1,9 @@
 import json
-from typing import Optional, cast
+from typing import cast
 from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
-from src.constants import evaluator_stream_object_map
+from src.db_utils import get_evaluator_stream_from_db, update_evaluator_stream
 
 router = APIRouter(
   tags=["Metrics"],
@@ -16,7 +16,11 @@ def get_metrics(stream_id: str):
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
 
-    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
+    try:
+        evaluator_streamer = get_evaluator_stream_from_db(evaluator_streamer_uuid)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error Getting Stream: {str(e)}")
+
     if not evaluator_streamer:
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
@@ -35,6 +39,9 @@ def get_metrics(stream_id: str):
         }
 
         metrics_json = json.dumps(metrics_dict)
+        
+        update_evaluator_stream(evaluator_streamer_uuid, evaluator_streamer)
+        
         return metrics_json
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error Getting Metrics: {str(e)}")

@@ -1,9 +1,9 @@
-from typing import Optional, cast
+from typing import cast
 from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
-from src.constants import evaluator_stream_object_map
+from src.db_utils import get_evaluator_stream_from_db, update_evaluator_stream
 
 router = APIRouter(
   tags=["Algorithm Management"]
@@ -20,7 +20,11 @@ def register_algorithm(stream_id: str, request: AlgorithmRegistrationRequest):
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
 
-    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
+    try:
+        evaluator_streamer = get_evaluator_stream_from_db(evaluator_streamer_uuid)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error Getting Stream: {str(e)}")
+
     if not evaluator_streamer:
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
@@ -28,6 +32,7 @@ def register_algorithm(stream_id: str, request: AlgorithmRegistrationRequest):
 
     try:
         algorithm_uuid = evaluator_streamer.register_algorithm(algorithm_name=request.algorithm_name)
+        update_evaluator_stream(evaluator_streamer_uuid, evaluator_streamer)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error registering algorithm: {str(e)}")
 
@@ -46,7 +51,11 @@ def get_algorithm_state(stream_id: str, algorithm_id: str):
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid Algorithm UUID format")
 
-    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
+    try:
+        evaluator_streamer = get_evaluator_stream_from_db(evaluator_streamer_uuid)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error Getting Stream: {str(e)}")
+    
     if not evaluator_streamer:
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
@@ -66,8 +75,12 @@ def get_all_algorithm_state(stream_id: str):
         evaluator_streamer_uuid = UUID(stream_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid Stream UUID format")
+    
+    try:
+        evaluator_streamer = get_evaluator_stream_from_db(evaluator_streamer_uuid)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error Getting Stream: {str(e)}")
 
-    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
     if not evaluator_streamer:
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
@@ -91,8 +104,12 @@ def is_algorithm_streaming_completed(stream_id: str, algorithm_id: str):
         algorithm_uuid = UUID(algorithm_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid Algorithm UUID format")
+    
+    try:
+        evaluator_streamer = get_evaluator_stream_from_db(evaluator_streamer_uuid)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error Getting Stream: {str(e)}")
 
-    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
     if not evaluator_streamer:
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 

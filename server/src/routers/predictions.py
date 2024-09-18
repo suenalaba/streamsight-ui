@@ -1,13 +1,11 @@
-import io
-from typing import List, Optional, cast
+from typing import List, cast
 from uuid import UUID
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, HTTPException
 import pandas as pd
 from pydantic import BaseModel, Field
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
-from streamsight.algorithms import ItemKNNStatic
 from streamsight.matrix import InteractionMatrix
-from src.constants import evaluator_stream_object_map
+from src.db_utils import get_evaluator_stream_from_db, update_evaluator_stream
 
 router = APIRouter(
   tags=["Predictions"]
@@ -31,7 +29,11 @@ async def submit_prediction(stream_id: str, algorithm_id: str, records: List[Dat
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
 
-    evaluator_streamer: Optional[EvaluatorStreamer] = evaluator_stream_object_map.get(evaluator_streamer_uuid)
+    try:
+        evaluator_streamer = get_evaluator_stream_from_db(evaluator_streamer_uuid)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting evaluator stream: {str(e)}")
+
     if not evaluator_streamer:
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
@@ -41,8 +43,10 @@ async def submit_prediction(stream_id: str, algorithm_id: str, records: List[Dat
         prediction_data = [record.model_dump() for record in records]
         prediction_df = pd.DataFrame(prediction_data)
         prediction_im = InteractionMatrix(prediction_df, item_ix='iid', user_ix='uid', timestamp_ix='ts')
+
         evaluator_streamer.submit_prediction(algorithm_uuid, prediction_im)
         assert evaluator_streamer.get_algorithm_state(algorithm_uuid).name in {"PREDICTED", "COMPLETED"}
+        update_evaluator_stream(evaluator_streamer_uuid, evaluator_streamer)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error Submitting Prediction: {str(e)}")
     
