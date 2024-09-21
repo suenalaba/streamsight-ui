@@ -1,36 +1,44 @@
 from enum import Enum
 from typing import List, cast
 from uuid import UUID
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from streamsight.datasets import (AmazonBookDataset, 
-                                  AmazonComputerDataset, 
-                                  AmazonMovieDataset, 
-                                  AmazonMusicDataset, 
-                                  YelpDataset,
-                                  TestDataset)
+from streamsight.datasets import (
+    AmazonBookDataset,
+    AmazonComputerDataset,
+    AmazonMovieDataset,
+    AmazonMusicDataset,
+    TestDataset,
+    YelpDataset,
+)
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
-from streamsight.settings import SlidingWindowSetting
 from streamsight.registries.registry import MetricEntry
-from src.db_utils import get_evaluator_stream_from_db, update_evaluator_stream, write_evaluator_stream_to_db
+from streamsight.settings import SlidingWindowSetting
 
-router = APIRouter(
-  tags=["Stream Management"]
+from src.db_utils import (
+    get_evaluator_stream_from_db,
+    update_evaluator_stream,
+    write_evaluator_stream_to_db,
 )
 
+router = APIRouter(tags=["Stream Management"])
+
 dataset_map = {
-    'amazon_music': AmazonMusicDataset,
-    'amazon_book': AmazonBookDataset,
-    'amazon_computer': AmazonComputerDataset,
-    'amazon_movie': AmazonMovieDataset,
-    'yelp': YelpDataset,
-    'test': TestDataset
+    "amazon_music": AmazonMusicDataset,
+    "amazon_book": AmazonBookDataset,
+    "amazon_computer": AmazonComputerDataset,
+    "amazon_movie": AmazonMovieDataset,
+    "yelp": YelpDataset,
+    "test": TestDataset,
 }
+
 
 class Metric(str, Enum):
     PrecisionK = "PrecisionK"
     RecallK = "RecallK"
     DCGK = "DCGK"
+
 
 class Stream(BaseModel):
     dataset_id: str
@@ -39,6 +47,7 @@ class Stream(BaseModel):
     background_t: int
     window_size: int
     n_seq_data: int
+
 
 @router.post("/streams")
 def create_stream(stream: Stream):
@@ -64,7 +73,9 @@ def create_stream(stream: Stream):
         )
         setting_sliding.split(data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error setting up sliding window: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error setting up sliding window: {str(e)}"
+        )
 
     try:
         metrics = []
@@ -77,7 +88,9 @@ def create_stream(stream: Stream):
         evaluator_streamer = EvaluatorStreamer(metrics, setting_sliding, stream.top_k)
         stream_id = write_evaluator_stream_to_db(evaluator_streamer)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating evaluator streamer: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error creating evaluator streamer: {str(e)}"
+        )
 
     return {"evaluator_stream_id": stream_id}
 
@@ -109,7 +122,7 @@ def start_stream(stream_id: str):
         raise HTTPException(status_code=500, detail=f"Error Getting Stream: {str(e)}")
     if not evaluator_streamer:
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
-    
+
     evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
 
     try:

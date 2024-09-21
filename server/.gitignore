@@ -13,3 +13,6 @@ LOGGING_CONFIG.yaml
 htmlcov/
 .coverage
 .DS_Store
+
+# ignore ruff generated files
+.ruff_cache/

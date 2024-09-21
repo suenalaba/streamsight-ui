@@ -1,8 +1,10 @@
 from typing import cast
 from uuid import UUID
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
+
 from src.db_utils import get_evaluator_stream_from_db, update_evaluator_stream
 
 router = APIRouter(

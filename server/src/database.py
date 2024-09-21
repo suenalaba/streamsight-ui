@@ -1,9 +1,10 @@
 
-from typing import Optional
 import uuid
+from typing import Optional
 
 from sqlalchemy import Engine
 from sqlmodel import Field, SQLModel, create_engine
+
 
 class Hero(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
