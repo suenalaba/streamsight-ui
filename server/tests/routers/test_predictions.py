@@ -1,13 +1,14 @@
 import logging
+from io import BytesIO
+from unittest.mock import MagicMock, patch
+from uuid import UUID
+
 import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock, patch
-from uuid import UUID
-from io import BytesIO
 
-from src.main import app
 from src.constants import evaluator_stream_object_map
+from src.main import app
 
 client = TestClient(app)
 

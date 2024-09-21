@@ -1,11 +1,13 @@
 from typing import List, Union, cast
 from uuid import UUID
-from fastapi import APIRouter, HTTPException
+
 import pandas as pd
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from scipy.sparse import csr_matrix
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 from streamsight.matrix import InteractionMatrix
+
 from src.db_utils import get_evaluator_stream_from_db, update_evaluator_stream
 
 router = APIRouter(

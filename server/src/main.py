@@ -1,8 +1,14 @@
 from fastapi import FastAPI
-from src.database import Hero, get_sql_connection
-from src.routers import algorithm_management, data_handling, metrics, predictions,  stream_management
-
 from sqlmodel import Session, select
+
+from src.database import Hero, get_sql_connection
+from src.routers import (
+    algorithm_management,
+    data_handling,
+    metrics,
+    predictions,
+    stream_management,
+)
 
 app = FastAPI()
 
@@ -21,6 +27,7 @@ def get_db_connection():
     with Session(get_sql_connection()) as session:
         statement = select(Hero)
         hero = session.exec(statement).first()
+        print(hero)
     return {"Successfully fetched from DB"}
 
 @app.post("/write-to-db", tags=["Healthcheck"])

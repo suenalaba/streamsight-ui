@@ -1,9 +1,11 @@
 import pickle
 import uuid
+
 from sqlmodel import Session, select
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 
 from src.database import EvaluatorStreamModel, get_sql_connection
+
 
 def write_evaluator_stream_to_db(evaluator_streamer: EvaluatorStreamer):
     try:

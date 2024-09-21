@@ -1,11 +1,12 @@
 import json
-import pytest
-from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, call, patch
 from uuid import UUID
 
-from src.main import app
+import pytest
+from fastapi.testclient import TestClient
+
 from src.constants import evaluator_stream_object_map
+from src.main import app
 
 client = TestClient(app)
 
