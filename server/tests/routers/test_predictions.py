@@ -1,13 +1,10 @@
 import logging
-from io import BytesIO
 from unittest.mock import MagicMock, patch
 from uuid import UUID
 
-import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
-from src.constants import evaluator_stream_object_map
 from src.main import app
 
 client = TestClient(app)
@@ -15,115 +12,243 @@ client = TestClient(app)
 # silence multipart logger
 logging.getLogger("multipart.multipart").setLevel(logging.WARNING)
 
+
 @pytest.fixture
-def mock_evaluator_streamer():
+def mock_evaluator_streamer_predicted():
     mock = MagicMock()
-    mock.get_data.return_value = pd.DataFrame({
-        "interactionid": [1, 2],
-        "uid": [1, 2],
-        "iid": [1, 2],
-        "ts": [1, 2]
-    })
-    mock.get_unlabeled_data.return_value = pd.DataFrame({
-        "interactionid": [3, 4],
-        "uid": [3, 4],
-        "iid": [3, 4],
-        "ts": [3, 4]
-    })
+    mock.submit_prediction.return_value = None
     mock.get_algorithm_state.return_value.name = "PREDICTED"
     return mock
 
+
 @pytest.fixture
-def mock_algorithm():
+def mock_evaluator_streamer_completed():
     mock = MagicMock()
-    mock.predict.return_value = pd.DataFrame({
-        "interactionid": [5, 6],
-        "uid": [5, 6],
-        "iid": [5, 6],
-        "ts": [5, 6]
-    })
-    mock.fit.return_value = None
+    mock.submit_prediction.return_value = None
+    mock.get_algorithm_state.return_value.name = "COMPLETED"
     return mock
 
-def test_submit_prediction_valid(mock_evaluator_streamer, mock_algorithm):
-    with patch.dict(evaluator_stream_object_map, {UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"): mock_evaluator_streamer}), \
-         patch("src.routers.predictions.ItemKNNStatic", return_value=mock_algorithm) as mock_item_knn_static:
-        
-        csv_content = "interactionid,uid,iid,ts\n1,1,1,1\n2,2,2,2"
+
+@pytest.fixture
+def mock_evaluator_streamer_submit_prediction_error():
+    mock = MagicMock()
+    mock.submit_prediction.side_effect = Exception("Error at submit_prediction()")
+    return mock
+
+
+@pytest.fixture
+def mock_dataframe_record():
+    return [{"interactionid": 12345, "uid": 67890, "iid": 54321, "ts": 1617181920}]
+
+
+@pytest.fixture
+def mock_prediction_csr_matrix():
+    return {
+        "data": [1, 2, 3, 4, 5, 6],
+        "indices": [0, 2, 2, 0, 1, 2],
+        "indptr": [0, 2, 3, 6],
+        "shape": [3, 3],
+    }
+
+
+@pytest.fixture
+def mock_prediction_im():
+    return MagicMock()
+
+
+def test_submit_prediction_valid_df(
+    mock_dataframe_record, mock_evaluator_streamer_predicted, mock_prediction_im
+):
+    with patch(
+        "src.routers.predictions.get_evaluator_stream_from_db",
+        return_value=mock_evaluator_streamer_predicted,
+    ) as mock_get_from_db, patch(
+        "src.routers.predictions.InteractionMatrix", return_value=mock_prediction_im
+    ) as mock_interaction_matrix, patch(
+        "src.routers.predictions.update_evaluator_stream", return_value=None
+    ) as mock_update_evaluator_streamer:
         response = client.post(
             "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
-            files={"file": ("filename.csv", BytesIO(csv_content.encode('utf-8')), "text/csv")}
+            json=mock_dataframe_record,
         )
 
-        mock_item_knn_static.assert_called_once()
-        mock_item_knn_static.return_value.fit.assert_called_once()
-        mock_item_knn_static.return_value.predict.assert_called_once()
-        mock_evaluator_streamer.get_data.assert_called_once()
-        mock_evaluator_streamer.get_unlabeled_data.assert_called_once()
-        mock_evaluator_streamer.submit_prediction.assert_called_once()
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
+        mock_interaction_matrix.assert_called_once()
+        mock_evaluator_streamer_predicted.submit_prediction.assert_called_once_with(
+            UUID("12345678-1234-5678-1234-567812345678"), mock_prediction_im
+        )
+        mock_evaluator_streamer_predicted.get_algorithm_state.assert_called_once_with(
+            UUID("12345678-1234-5678-1234-567812345678")
+        )
+        mock_update_evaluator_streamer.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+            mock_evaluator_streamer_predicted,
+        )
 
         assert response.status_code == 200
         assert response.json() == {"status": True}
 
-def test_submit_prediction_invalid_stream_id():
-    csv_content = "interactionid,uid,iid,ts\n1,1,1,1\n2,2,2,2"
+
+def test_submit_prediction_valid_csr_matrix(
+    mock_prediction_csr_matrix, mock_evaluator_streamer_predicted, mock_prediction_im
+):
+    with patch(
+        "src.routers.predictions.get_evaluator_stream_from_db",
+        return_value=mock_evaluator_streamer_predicted,
+    ) as mock_get_from_db, patch(
+        "src.routers.predictions.InteractionMatrix", return_value=mock_prediction_im
+    ) as mock_interaction_matrix, patch(
+        "src.routers.predictions.update_evaluator_stream", return_value=None
+    ) as mock_update_evaluator_streamer:
+        response = client.post(
+            "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
+            json=mock_prediction_csr_matrix,
+        )
+
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
+        mock_interaction_matrix.assert_not_called()
+        mock_evaluator_streamer_predicted.submit_prediction.assert_called_once()
+        mock_evaluator_streamer_predicted.get_algorithm_state.assert_called_once_with(
+            UUID("12345678-1234-5678-1234-567812345678")
+        )
+        mock_update_evaluator_streamer.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+            mock_evaluator_streamer_predicted,
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {"status": True}
+
+
+def test_submit_prediction_invalid_stream_id(mock_dataframe_record):
     response = client.post(
         "/streams/invalid-uuid/algorithms/12345678-1234-5678-1234-567812345678/predictions",
-        files={"file": ("filename.csv", BytesIO(csv_content.encode('utf-8')), "text/csv")}
+        json=mock_dataframe_record,
     )
 
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid UUID format"}
 
-def test_submit_prediction_invalid_algorithm_id():
-    csv_content = "interactionid,uid,iid,ts\n1,1,1,1\n2,2,2,2"
+
+def test_submit_prediction_invalid_algorithm_id(mock_dataframe_record):
     response = client.post(
         "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/invalid-uuid/predictions",
-        files={"file": ("filename.csv", BytesIO(csv_content.encode('utf-8')), "text/csv")}
+        json=mock_dataframe_record,
     )
 
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid UUID format"}
 
-def test_submit_prediction_evaluator_not_found():
-    csv_content = "interactionid,uid,iid,ts\n1,1,1,1\n2,2,2,2"
-    response = client.post(
-        "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
-        files={"file": ("filename.csv", BytesIO(csv_content.encode('utf-8')), "text/csv")}
-    )
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "EvaluatorStreamer not found"}
-
-def test_submit_prediction_missing_columns(mock_evaluator_streamer):
-    with patch.dict(evaluator_stream_object_map, {UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"): mock_evaluator_streamer}):
-        csv_content = "interactionid,uid,iid\n1,1,1\n2,2,2"
+def test_submit_prediction_evaluator_not_found(mock_dataframe_record):
+    with patch(
+        "src.routers.predictions.get_evaluator_stream_from_db", return_value=None
+    ) as mock_get_from_db:
         response = client.post(
             "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
-            files={"file": ("filename.csv", BytesIO(csv_content.encode('utf-8')), "text/csv")}
+            json=mock_dataframe_record,
         )
 
-        assert response.status_code == 400
-        assert response.json() == {"detail": "CSV file is missing required columns"}
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
 
-def test_submit_prediction_internal_error(mock_evaluator_streamer, mock_algorithm):
-    mock_evaluator_streamer.submit_prediction.side_effect = Exception("Internal error")
-    
-    with patch.dict(evaluator_stream_object_map, {UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"): mock_evaluator_streamer}), \
-         patch("src.routers.predictions.ItemKNNStatic", return_value=mock_algorithm) as mock_item_knn_static:
-        
-        csv_content = "interactionid,uid,iid,ts\n1,1,1,1\n2,2,2,2"
+        assert response.status_code == 404
+        assert response.json() == {"detail": "EvaluatorStreamer not found"}
+
+
+def test_submit_prediction_error_fetching_evaluator_from_db(mock_dataframe_record):
+    with patch(
+        "src.routers.predictions.get_evaluator_stream_from_db",
+        side_effect=Exception("Error fetching from DB"),
+    ) as mock_get_from_db:
         response = client.post(
             "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
-            files={"file": ("filename.csv", BytesIO(csv_content.encode('utf-8')), "text/csv")}
+            json=mock_dataframe_record,
         )
-        
-        mock_item_knn_static.assert_called_once()
-        mock_item_knn_static.return_value.fit.assert_called_once()
-        mock_item_knn_static.return_value.predict.assert_called_once()
-        mock_evaluator_streamer.get_data.assert_called_once()
-        mock_evaluator_streamer.get_unlabeled_data.assert_called_once()
-        mock_evaluator_streamer.submit_prediction.assert_called_once()
+
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
 
         assert response.status_code == 500
-        assert response.json() == {"detail": "Error Submitting Prediction: Internal error"}
+        assert response.json() == {
+            "detail": "Error getting evaluator stream: Error fetching from DB"
+        }
+
+
+def test_submit_df_prediction_data_error(
+    mock_dataframe_record,
+    mock_evaluator_streamer_submit_prediction_error,
+    mock_prediction_im,
+):
+    with patch(
+        "src.routers.predictions.get_evaluator_stream_from_db",
+        return_value=mock_evaluator_streamer_submit_prediction_error,
+    ) as mock_get_from_db, patch(
+        "src.routers.predictions.InteractionMatrix", return_value=mock_prediction_im
+    ) as mock_interaction_matrix:
+        response = client.post(
+            "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
+            json=mock_dataframe_record,
+        )
+
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
+        mock_interaction_matrix.assert_called_once()
+        mock_evaluator_streamer_submit_prediction_error.submit_prediction.assert_called_once_with(
+            UUID("12345678-1234-5678-1234-567812345678"), mock_prediction_im
+        )
+
+        assert response.status_code == 500
+        assert response.json() == {
+            "detail": "Error Submitting Prediction: Error at submit_prediction()"
+        }
+
+
+def test_submit_csr_matrix_prediction_data_error(
+    mock_prediction_csr_matrix,
+    mock_evaluator_streamer_submit_prediction_error,
+    mock_prediction_im,
+):
+    with patch(
+        "src.routers.predictions.get_evaluator_stream_from_db",
+        return_value=mock_evaluator_streamer_submit_prediction_error,
+    ) as mock_get_from_db, patch(
+        "src.routers.predictions.InteractionMatrix", return_value=mock_prediction_im
+    ) as mock_interaction_matrix:
+        response = client.post(
+            "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
+            json=mock_prediction_csr_matrix,
+        )
+
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
+        mock_evaluator_streamer_submit_prediction_error.submit_prediction.assert_called_once()
+        mock_interaction_matrix.assert_not_called()
+
+        assert response.status_code == 500
+        assert response.json() == {
+            "detail": "Error Submitting Prediction: Error at submit_prediction()"
+        }
+
+
+def test_submit_prediction_invalid_format(mock_evaluator_streamer_predicted):
+    with patch(
+        "src.routers.predictions.get_evaluator_stream_from_db",
+        return_value=mock_evaluator_streamer_predicted,
+    ) as mock_get_from_db:
+        response = client.post(
+            "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
+            json={"invalid": "format"},
+        )
+
+        mock_get_from_db.assert_not_called()
+
+        assert response.status_code == 422
