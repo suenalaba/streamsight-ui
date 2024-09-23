@@ -4,7 +4,6 @@ from uuid import UUID
 import pytest
 from fastapi.testclient import TestClient
 
-from src.constants import evaluator_stream_object_map
 from src.main import app
 
 client = TestClient(app)
@@ -190,20 +189,28 @@ def test_create_stream_error_creating_evaluator_streamer(valid_stream):
 
 
 def test_start_stream_valid():
-    mock_evaluator_streamer_instance = MagicMock()
-    mock_evaluator_streamer_instance.start_stream.return_value = ""
+    with patch(
+        "src.routers.stream_management.get_evaluator_stream_from_db"
+    ) as mock_get_from_db, patch(
+        "src.routers.stream_management.update_evaluator_stream"
+    ) as mock_update_evaluator_stream:
+        mock_evaluator_streamer_instance = MagicMock()
+        mock_evaluator_streamer_instance.start_stream.return_value = ""
+        mock_get_from_db.return_value = mock_evaluator_streamer_instance
 
-    evaluator_stream_object_map[UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")] = (
-        mock_evaluator_streamer_instance
-    )
+        response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
 
-    response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
+        assert mock_evaluator_streamer_instance.start_stream.call_count == 1
+        mock_update_evaluator_stream.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+            mock_evaluator_streamer_instance,
+        )
 
-    assert mock_evaluator_streamer_instance.start_stream.call_count == 1
-    assert response.status_code == 200
-    assert response.json() == {"status": True}
-
-    evaluator_stream_object_map.clear()
+        assert response.status_code == 200
+        assert response.json() == {"status": True}
 
 
 def test_start_stream_invalid_uuid():
@@ -213,46 +220,69 @@ def test_start_stream_invalid_uuid():
 
 
 def test_start_stream_stream_not_found():
-    response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
-    assert response.status_code == 404
-    assert response.json() == {"detail": "EvaluatorStreamer not found"}
+    with patch(
+        "src.routers.stream_management.get_evaluator_stream_from_db"
+    ) as mock_get_from_db:
+        mock_get_from_db.return_value = None
+        response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
+        assert response.status_code == 404
+        assert response.json() == {"detail": "EvaluatorStreamer not found"}
+
+
+def test_start_stream_failed_to_get_from_db():
+    with patch(
+        "src.routers.stream_management.get_evaluator_stream_from_db",
+        side_effect=Exception("Failed to fetch from DB"),
+    ) as mock_get_from_db:
+        mock_get_from_db.return_value = None
+        response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
+        assert response.status_code == 500
+        assert response.json() == {
+            "detail": "Error Getting Stream: Failed to fetch from DB"
+        }
 
 
 def test_start_stream_that_has_already_started():
-    mock_evaluator_streamer_instance = MagicMock()
-    mock_evaluator_streamer_instance.start_stream.side_effect = ValueError(
-        "Cannot start the stream again"
-    )
+    with patch(
+        "src.routers.stream_management.get_evaluator_stream_from_db"
+    ) as mock_get_from_db:
+        mock_evaluator_streamer_instance = MagicMock()
+        mock_evaluator_streamer_instance.start_stream.side_effect = ValueError(
+            "Cannot start the stream again"
+        )
+        mock_get_from_db.return_value = mock_evaluator_streamer_instance
 
-    evaluator_stream_object_map[UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")] = (
-        mock_evaluator_streamer_instance
-    )
+        response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
 
-    response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
+        assert mock_evaluator_streamer_instance.start_stream.call_count == 1
 
-    assert mock_evaluator_streamer_instance.start_stream.call_count == 1
-    assert response.status_code == 409
-    assert response.json() == {
-        "detail": "Error Starting Stream: Cannot start the stream again"
-    }
-
-    evaluator_stream_object_map.clear()
+        assert response.status_code == 409
+        assert response.json() == {
+            "detail": "Error Starting Stream: Cannot start the stream again"
+        }
 
 
 def test_start_stream_error():
-    mock_evaluator_streamer_instance = MagicMock()
-    mock_evaluator_streamer_instance.start_stream.side_effect = Exception(
-        "Stream starting error"
-    )
+    with patch(
+        "src.routers.stream_management.get_evaluator_stream_from_db"
+    ) as mock_get_from_db:
+        mock_evaluator_streamer_instance = MagicMock()
+        mock_evaluator_streamer_instance.start_stream.side_effect = Exception(
+            "Stream starting error"
+        )
+        mock_get_from_db.return_value = mock_evaluator_streamer_instance
 
-    evaluator_stream_object_map[UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")] = (
-        mock_evaluator_streamer_instance
-    )
+        response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
 
-    response = client.post("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start")
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
+        assert mock_evaluator_streamer_instance.start_stream.call_count == 1
 
-    assert mock_evaluator_streamer_instance.start_stream.call_count == 1
-    assert response.status_code == 500
-    assert response.json() == {"detail": "Error Starting Stream: Stream starting error"}
-
-    evaluator_stream_object_map.clear()
+        assert response.status_code == 500
+        assert response.json() == {
+            "detail": "Error Starting Stream: Stream starting error"
+        }
