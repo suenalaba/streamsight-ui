@@ -92,11 +92,11 @@ def test_submit_prediction_valid_df(
 
 
 def test_submit_prediction_valid_csr_matrix(
-    mock_prediction_csr_matrix, mock_evaluator_streamer_predicted, mock_prediction_im
+    mock_prediction_csr_matrix, mock_evaluator_streamer_completed, mock_prediction_im
 ):
     with patch(
         "src.routers.predictions.get_evaluator_stream_from_db",
-        return_value=mock_evaluator_streamer_predicted,
+        return_value=mock_evaluator_streamer_completed,
     ) as mock_get_from_db, patch(
         "src.routers.predictions.InteractionMatrix", return_value=mock_prediction_im
     ) as mock_interaction_matrix, patch(
@@ -111,13 +111,13 @@ def test_submit_prediction_valid_csr_matrix(
             UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
         )
         mock_interaction_matrix.assert_not_called()
-        mock_evaluator_streamer_predicted.submit_prediction.assert_called_once()
-        mock_evaluator_streamer_predicted.get_algorithm_state.assert_called_once_with(
+        mock_evaluator_streamer_completed.submit_prediction.assert_called_once()
+        mock_evaluator_streamer_completed.get_algorithm_state.assert_called_once_with(
             UUID("12345678-1234-5678-1234-567812345678")
         )
         mock_update_evaluator_streamer.assert_called_once_with(
             UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
-            mock_evaluator_streamer_predicted,
+            mock_evaluator_streamer_completed,
         )
 
         assert response.status_code == 200
