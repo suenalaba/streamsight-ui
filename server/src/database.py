@@ -1,24 +1,18 @@
-
 import uuid
-from typing import Optional
 
 from sqlalchemy import Engine
 from sqlmodel import Field, SQLModel, create_engine
 
-
-class Hero(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-    secret_name: str
-    age: Optional[int] = None
 
 class EvaluatorStreamModel(SQLModel, table=True):
     __tablename__ = "evaluator_streams"
     stream_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     stream_object: bytes
 
+
 # SQL Connection
 _engine: Engine = None
+
 
 def get_sql_connection() -> Engine:
     global _engine
