@@ -102,7 +102,11 @@ def get_stream(stream_id: str):
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
 
-    evaluator_streamer = get_evaluator_stream_from_db(uuid_obj)
+    try:
+        evaluator_streamer = get_evaluator_stream_from_db(uuid_obj)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error Getting Stream: {str(e)}")
+
     if not evaluator_streamer:
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
