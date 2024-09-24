@@ -144,14 +144,17 @@ def test_register_algorithm_internal_error(mock_evaluator_streamer):
 
 
 def test_get_algorithm_state_valid(mock_evaluator_streamer):
-    with patch.dict(
-        evaluator_stream_object_map,
-        {UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"): mock_evaluator_streamer},
-    ):
+    with patch(
+        "src.routers.algorithm_management.get_evaluator_stream_from_db",
+        return_value=mock_evaluator_streamer,
+    ) as mock_get_from_db:
         response = client.get(
             "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/state"
         )
 
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
         mock_evaluator_streamer.get_algorithm_state.assert_called_once_with(
             UUID("12345678-1234-5678-1234-567812345678")
         )
@@ -183,28 +186,56 @@ def test_get_algorithm_state_invalid_algorithm_id(mock_evaluator_streamer):
 
 
 def test_get_algorithm_state_evaluator_not_found(mock_evaluator_streamer):
-    response = client.get(
-        "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/state"
-    )
+    with patch(
+        "src.routers.algorithm_management.get_evaluator_stream_from_db",
+        return_value=None,
+    ) as mock_get_from_db:
+        response = client.get(
+            "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/state"
+        )
 
-    mock_evaluator_streamer.get_algorithm_state.assert_not_called()
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
+        mock_evaluator_streamer.get_algorithm_state.assert_not_called()
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "EvaluatorStreamer not found"}
+        assert response.status_code == 404
+        assert response.json() == {"detail": "EvaluatorStreamer not found"}
+
+
+def test_get_algorithm_state_error_getting_evaluator_from_db(mock_evaluator_streamer):
+    with patch(
+        "src.routers.algorithm_management.get_evaluator_stream_from_db",
+        side_effect=Exception("Internal error"),
+    ) as mock_get_from_db:
+        response = client.get(
+            "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/state"
+        )
+
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
+        mock_evaluator_streamer.get_algorithm_state.assert_not_called()
+
+        assert response.status_code == 500
+        assert response.json() == {"detail": "Error Getting Stream: Internal error"}
 
 
 def test_get_algorithm_state_internal_error(mock_evaluator_streamer):
     mock_evaluator_streamer.get_algorithm_state.side_effect = Exception(
         "Internal error"
     )
-    with patch.dict(
-        evaluator_stream_object_map,
-        {UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"): mock_evaluator_streamer},
-    ):
+    with patch(
+        "src.routers.algorithm_management.get_evaluator_stream_from_db",
+        return_value=mock_evaluator_streamer,
+    ) as mock_get_from_db:
         response = client.get(
             "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/state"
         )
 
+        mock_get_from_db.assert_called_once_with(
+            UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+        )
         mock_evaluator_streamer.get_algorithm_state.assert_called_once_with(
             UUID("12345678-1234-5678-1234-567812345678")
         )
