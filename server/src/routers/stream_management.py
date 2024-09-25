@@ -3,6 +3,8 @@ from typing import List, cast
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from streamsight.datasets import (
     AmazonBookDataset,
@@ -21,6 +23,8 @@ from src.db_utils import (
     update_evaluator_stream,
     write_evaluator_stream_to_db,
 )
+from src.utils.db_utils import GetEvaluatorStreamErrorException, get_stream_from_db
+from src.utils.uuid_utils import InvalidUUIDException, get_stream_uuid_object
 
 router = APIRouter(tags=["Stream Management"])
 
@@ -111,6 +115,39 @@ def get_stream(stream_id: str):
         raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
 
     return evaluator_streamer.metric_k
+
+
+@router.get("/streams/{stream_id}/settings")
+def get_stream_settings(stream_id: str):
+    try:
+        uuid_obj = get_stream_uuid_object(stream_id)
+        evaluator_streamer = get_stream_from_db(uuid_obj)
+        if evaluator_streamer.setting._sliding_window_setting:
+            sliding_window_setting = cast(
+                SlidingWindowSetting, evaluator_streamer.setting
+            )
+
+            n_seq_data = sliding_window_setting.n_seq_data
+            window_size = sliding_window_setting.window_size
+            background_t = sliding_window_setting.t
+            top_k = sliding_window_setting.top_K
+
+            data = {
+                "n_seq_data": n_seq_data,
+                "window_size": window_size,
+                "background_t": background_t,
+                "top_k": top_k,
+            }
+
+            json_data = jsonable_encoder(data)
+
+            return JSONResponse(content=json_data)
+        else:
+            return "Other settings are currently not supported"
+    except (InvalidUUIDException, GetEvaluatorStreamErrorException) as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/streams/{stream_id}/start")
