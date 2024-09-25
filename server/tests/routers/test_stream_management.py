@@ -1,10 +1,13 @@
-from unittest.mock import MagicMock, call, patch
+import unittest
+from unittest.mock import MagicMock, PropertyMock, call, patch
 from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
 
 from src.main import app
+from src.utils.db_utils import GetEvaluatorStreamErrorException
+from src.utils.uuid_utils import InvalidUUIDException
 
 client = TestClient(app)
 
@@ -50,6 +53,151 @@ def mock_evaluator_stream():
     mock = MagicMock()
     mock.metric_k = 10
     return mock
+
+
+class TestGetStreamSettings(unittest.TestCase):
+    def setUp(self):
+        self.mock_evaluator_stream = self.create_mock_evaluator_stream()
+        self.unsupported_mock_evaluator_stream = (
+            self.create_unsupported_mock_evaluator_stream()
+        )
+
+    def create_mock_evaluator_stream(self):
+        mock = MagicMock()
+        mock.metric_k = 10
+        sliding_window_setting_mock = MagicMock()
+        type(sliding_window_setting_mock).n_seq_data = PropertyMock(return_value=100)
+        type(sliding_window_setting_mock).window_size = PropertyMock(return_value=50)
+        type(sliding_window_setting_mock).t = PropertyMock(return_value=5)
+        type(sliding_window_setting_mock).top_K = PropertyMock(return_value=10)
+
+        type(mock.setting)._sliding_window_setting = PropertyMock(return_value=True)
+        mock.setting = sliding_window_setting_mock
+        return mock
+
+    def create_unsupported_mock_evaluator_stream(self):
+        mock = MagicMock()
+        mock.metric_k = 10
+        sliding_window_setting_mock = MagicMock()
+        type(sliding_window_setting_mock).n_seq_data = PropertyMock(return_value=100)
+        type(sliding_window_setting_mock).window_size = PropertyMock(return_value=50)
+        type(sliding_window_setting_mock).t = PropertyMock(return_value=5)
+        type(sliding_window_setting_mock).top_K = PropertyMock(return_value=10)
+        type(sliding_window_setting_mock)._sliding_window_setting = PropertyMock(
+            return_value=False
+        )
+        mock.setting = sliding_window_setting_mock
+        return mock
+
+    def test_get_stream_settings_valid(self):
+        with patch(
+            "src.routers.stream_management.get_stream_from_db",
+            return_value=self.mock_evaluator_stream,
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj:
+            response = client.get(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/settings"
+            )
+
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_from_db.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+            )
+
+            assert response.status_code == 200
+            assert response.json() == {
+                "n_seq_data": 100,
+                "window_size": 50,
+                "background_t": 5,
+                "top_k": 10,
+            }
+
+    def test_get_stream_setting_not_supported(self):
+        with patch(
+            "src.routers.stream_management.get_stream_from_db",
+            return_value=self.unsupported_mock_evaluator_stream,
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj:
+            response = client.get(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/settings"
+            )
+
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_from_db.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+            )
+
+            assert response.status_code == 501
+            assert response.json() == {
+                "detail": "Other settings are currently not supported"
+            }
+
+    def test_get_stream_settings_invalid_uuid(self):
+        with patch(
+            "src.routers.stream_management.get_stream_from_db",
+            return_value=self.mock_evaluator_stream,
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.get_stream_uuid_object",
+            side_effect=InvalidUUIDException(),
+        ) as mock_get_uuid_obj:
+            response = client.get("/streams/invalid_uuid/settings")
+
+            mock_get_uuid_obj.assert_called_once_with("invalid_uuid")
+            mock_get_from_db.assert_not_called()
+
+            assert response.status_code == 400
+            assert response.json() == {"detail": "Invalid UUID format"}
+
+    def test_get_stream_settings_stream_not_found(self):
+        with patch(
+            "src.routers.stream_management.get_stream_from_db",
+            side_effect=GetEvaluatorStreamErrorException(),
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj:
+            response = client.get(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/settings"
+            )
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_from_db.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+            )
+            assert response.status_code == 500
+            assert response.json() == {
+                "detail": "Error getting evaluator stream from database"
+            }
+
+    def test_get_stream_settings_error(self):
+        with patch(
+            "src.routers.stream_management.get_stream_from_db",
+            side_effect=Exception("Error fetching from DB"),
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj:
+            response = client.get(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/settings"
+            )
+
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_from_db.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+            )
+            assert response.status_code == 500
+            assert response.json() == {"detail": "Error fetching from DB"}
 
 
 def test_create_stream_valid(valid_stream):
