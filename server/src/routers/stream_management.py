@@ -143,7 +143,11 @@ def get_stream_settings(stream_id: str):
 
             return JSONResponse(content=json_data)
         else:
-            return "Other settings are currently not supported"
+            raise HTTPException(
+                status_code=501, detail="Other settings are currently not supported"
+            )
+    except HTTPException:
+        raise
     except (InvalidUUIDException, GetEvaluatorStreamErrorException) as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
