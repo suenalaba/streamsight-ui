@@ -69,7 +69,7 @@ class TestCreateStream(unittest.TestCase):
             "src.routers.stream_management.EvaluatorStreamer",
             return_value=self.mock_evaluator_stream_instance,
         ) as mock_evaluator_streamer, patch(
-            "src.routers.stream_management.write_evaluator_stream_to_db",
+            "src.routers.stream_management.write_stream_to_db",
             return_value="336e4cb7-861b-4870-8c29-3ffc530711ef",
         ) as mock_write_to_db:
             response = client.post("/streams", json=self.valid_stream)
@@ -185,6 +185,51 @@ class TestCreateStream(unittest.TestCase):
             assert response.json() == {
                 "detail": "Error creating evaluator streamer: Evaluator streamer error"
             }
+
+    def test_create_stream_error_write_stream_to_db(self):
+        with patch(
+            "src.routers.stream_management.dataset_map",
+            **{"__getitem__.return_value": self.mock_dataset_instance},
+        ) as mock_dataset_map, patch(
+            "src.routers.stream_management.SlidingWindowSetting",
+            return_value=self.mock_sliding_window_instance,
+        ) as mock_sliding_window_setting, patch(
+            "src.routers.stream_management.MetricEntry",
+            side_effect=["PrecisionK", "RecallK"],
+        ) as mock_metric_entry, patch(
+            "src.routers.stream_management.EvaluatorStreamer",
+            return_value=self.mock_evaluator_stream_instance,
+        ) as mock_evaluator_streamer, patch(
+            "src.routers.stream_management.write_stream_to_db",
+            side_effect=DatabaseErrorException("error writing to db"),
+        ) as mock_write_to_db:
+            response = client.post("/streams", json=self.valid_stream)
+
+            mock_dataset_map.__getitem__.assert_called_once_with("amazon_music")
+            self.mock_dataset_instance().load.assert_called_once()
+
+            mock_sliding_window_setting.assert_called_once_with(
+                background_t=1406851200,
+                window_size=60 * 60 * 24 * 300,  # day times N
+                n_seq_data=3,
+                top_K=10,
+            )
+            self.mock_sliding_window_instance.split.assert_called_once_with("data")
+
+            assert mock_metric_entry.call_count == 2
+            expected_calls = [call("PrecisionK", K=10), call("RecallK", K=10)]
+            mock_metric_entry.assert_has_calls(expected_calls)
+
+            mock_evaluator_streamer.assert_called_once_with(
+                ["PrecisionK", "RecallK"], self.mock_sliding_window_instance, 10
+            )
+
+            mock_write_to_db.assert_called_once_with(
+                self.mock_evaluator_stream_instance
+            )
+
+            assert response.status_code == 500
+            assert response.json() == {"detail": "error writing to db"}
 
 
 class TestGetStreamSettings(unittest.TestCase):

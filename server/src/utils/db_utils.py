@@ -64,3 +64,20 @@ def update_stream(stream_id: uuid.UUID, evaluator_streamer: EvaluatorStreamer):
         raise DatabaseErrorException(
             "Error updating evaluator stream in database: " + str(e)
         )
+
+
+def write_stream_to_db(evaluator_streamer: EvaluatorStreamer):
+    try:
+        # TODO: Uncomment this when https://github.com/HiIAmTzeKean/Streamsight/pull/102 is deployed
+        # evaluator_streamer.prepare_dump()
+        evaluator_stream_obj = pickle.dumps(evaluator_streamer)
+
+        with Session(get_sql_connection()) as session:
+            new_stream = EvaluatorStreamModel(stream_object=evaluator_stream_obj)
+            session.add(new_stream)
+            session.commit()
+            return new_stream.stream_id
+    except Exception as e:
+        raise DatabaseErrorException(
+            "Error write evaluator stream to database: " + str(e)
+        )
