@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi.testclient import TestClient
 
 from src.main import app
-from src.utils.db_utils import GetEvaluatorStreamErrorException
+from src.utils.db_utils import DatabaseErrorException, GetEvaluatorStreamErrorException
 from src.utils.uuid_utils import InvalidUUIDException
 
 client = TestClient(app)
@@ -444,15 +444,21 @@ class TestStartStream(unittest.TestCase):
 
     def test_start_stream_valid(self):
         with patch(
-            "src.routers.stream_management.get_evaluator_stream_from_db",
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
             return_value=self.valid_mock_evaluator_stream,
         ) as mock_get_from_db, patch(
-            "src.routers.stream_management.update_evaluator_stream"
+            "src.routers.stream_management.update_stream"
         ) as mock_update_evaluator_stream:
             response = client.post(
                 "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start"
             )
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
@@ -466,59 +472,102 @@ class TestStartStream(unittest.TestCase):
             assert response.json() == {"status": True}
 
     def test_start_stream_invalid_uuid(self):
-        response = client.post("/streams/invalid_uuid/start")
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Invalid UUID format"}
+        with patch(
+            "src.routers.stream_management.get_stream_uuid_object",
+            side_effect=InvalidUUIDException(),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
+            return_value=self.valid_mock_evaluator_stream,
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.update_stream"
+        ) as mock_update_evaluator_stream:
+            response = client.post("/streams/invalid_uuid/start")
+
+            mock_get_uuid_obj.assert_called_once_with("invalid_uuid")
+            mock_get_from_db.assert_not_called()
+            mock_update_evaluator_stream.assert_not_called()
+
+            assert response.status_code == 400
+            assert response.json() == {"detail": "Invalid UUID format"}
 
     def test_start_stream_stream_not_found(self):
         with patch(
-            "src.routers.stream_management.get_evaluator_stream_from_db",
-            return_value=None,
-        ) as mock_get_from_db:
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
+            side_effect=GetEvaluatorStreamErrorException(
+                message="EvaluatorStreamer not found", status_code=404
+            ),
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.update_stream"
+        ) as mock_update_evaluator_stream:
             response = client.post(
                 "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start"
             )
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
+            mock_update_evaluator_stream.assert_not_called()
 
             assert response.status_code == 404
             assert response.json() == {"detail": "EvaluatorStreamer not found"}
 
     def test_start_stream_failed_to_get_from_db(self):
         with patch(
-            "src.routers.stream_management.get_evaluator_stream_from_db",
-            side_effect=Exception("Failed to fetch from DB"),
-        ) as mock_get_from_db:
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
+            side_effect=GetEvaluatorStreamErrorException(),
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.update_stream"
+        ) as mock_update_evaluator_stream:
             response = client.post(
                 "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start"
             )
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
+            mock_update_evaluator_stream.assert_not_called()
 
             assert response.status_code == 500
             assert response.json() == {
-                "detail": "Error Getting Stream: Failed to fetch from DB"
+                "detail": "Error getting evaluator stream from database"
             }
 
     def test_start_stream_that_has_already_started(self):
         with patch(
-            "src.routers.stream_management.get_evaluator_stream_from_db",
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
             return_value=self.already_started_mock_evaluator_stream,
-        ) as mock_get_from_db:
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.update_stream"
+        ) as mock_update_evaluator_stream:
             response = client.post(
                 "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start"
             )
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
             assert (
                 self.already_started_mock_evaluator_stream.start_stream.call_count == 1
             )
+            mock_update_evaluator_stream.assert_not_called()
 
             assert response.status_code == 409
             assert response.json() == {
@@ -527,19 +576,60 @@ class TestStartStream(unittest.TestCase):
 
     def test_start_stream_error(self):
         with patch(
-            "src.routers.stream_management.get_evaluator_stream_from_db",
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
             return_value=self.invalid_mock_evaluator_stream,
-        ) as mock_get_from_db:
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.update_stream"
+        ) as mock_update_evaluator_stream:
             response = client.post(
                 "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start"
             )
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
             assert self.invalid_mock_evaluator_stream.start_stream.call_count == 1
+            mock_update_evaluator_stream.assert_not_called()
 
             assert response.status_code == 500
             assert response.json() == {
                 "detail": "Error Starting Stream: Stream starting error"
+            }
+
+    def test_start_stream_update_stream_error(self):
+        with patch(
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
+            return_value=self.valid_mock_evaluator_stream,
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.update_stream",
+            side_effect=DatabaseErrorException("Update stream error"),
+        ) as mock_update_evaluator_stream:
+            response = client.post(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/start"
+            )
+
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_from_db.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+            )
+            assert self.valid_mock_evaluator_stream.start_stream.call_count == 1
+            mock_update_evaluator_stream.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+                self.valid_mock_evaluator_stream,
+            )
+
+            assert response.status_code == 500
+            assert response.json() == {
+                "detail": "Error Starting Stream: Update stream error"
             }
