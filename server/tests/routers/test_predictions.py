@@ -6,6 +6,8 @@ from uuid import UUID
 from fastapi.testclient import TestClient
 
 from src.main import app
+from src.utils.db_utils import DatabaseErrorException, GetEvaluatorStreamErrorException
+from src.utils.uuid_utils import InvalidUUIDException
 
 client = TestClient(app)
 
@@ -61,19 +63,31 @@ class TestSubmitPrediction(unittest.TestCase):
 
     def test_submit_prediction_valid_df(self):
         with patch(
-            "src.routers.predictions.get_evaluator_stream_from_db",
+            "src.routers.predictions.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid_obj, patch(
+            "src.routers.predictions.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid_obj, patch(
+            "src.routers.predictions.get_stream_from_db",
             return_value=self.mock_evaluator_streamer_predicted,
         ) as mock_get_from_db, patch(
             "src.routers.predictions.InteractionMatrix",
             return_value=self.mock_prediction_im,
         ) as mock_interaction_matrix, patch(
-            "src.routers.predictions.update_evaluator_stream", return_value=None
+            "src.routers.predictions.update_stream", return_value=None
         ) as mock_update_evaluator_streamer:
             response = client.post(
                 "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
                 json=self.mock_dataframe_record,
             )
 
+            mock_get_stream_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_algo_uuid_obj.assert_called_once_with(
+                "12345678-1234-5678-1234-567812345678"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
@@ -94,19 +108,31 @@ class TestSubmitPrediction(unittest.TestCase):
 
     def test_submit_prediction_valid_csr_matrix(self):
         with patch(
-            "src.routers.predictions.get_evaluator_stream_from_db",
+            "src.routers.predictions.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid_obj, patch(
+            "src.routers.predictions.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid_obj, patch(
+            "src.routers.predictions.get_stream_from_db",
             return_value=self.mock_evaluator_streamer_completed,
         ) as mock_get_from_db, patch(
             "src.routers.predictions.InteractionMatrix",
             return_value=self.mock_prediction_im,
         ) as mock_interaction_matrix, patch(
-            "src.routers.predictions.update_evaluator_stream", return_value=None
+            "src.routers.predictions.update_stream", return_value=None
         ) as mock_update_evaluator_streamer:
             response = client.post(
                 "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
                 json=self.mock_prediction_csr_matrix,
             )
 
+            mock_get_stream_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_algo_uuid_obj.assert_called_once_with(
+                "12345678-1234-5678-1234-567812345678"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
@@ -124,63 +150,140 @@ class TestSubmitPrediction(unittest.TestCase):
             assert response.json() == {"status": True}
 
     def test_submit_prediction_invalid_stream_id(self):
-        response = client.post(
-            "/streams/invalid-uuid/algorithms/12345678-1234-5678-1234-567812345678/predictions",
-            json=self.mock_dataframe_record,
-        )
+        with patch(
+            "src.routers.predictions.get_stream_uuid_object",
+            side_effect=InvalidUUIDException("Invalid UUID format"),
+        ) as mock_get_stream_uuid_obj, patch(
+            "src.routers.predictions.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid_obj, patch(
+            "src.routers.predictions.get_stream_from_db",
+            return_value=self.mock_evaluator_streamer_completed,
+        ) as mock_get_from_db, patch(
+            "src.routers.predictions.update_stream", return_value=None
+        ) as mock_update_evaluator_streamer:
+            response = client.post(
+                "/streams/invalid-uuid/algorithms/12345678-1234-5678-1234-567812345678/predictions",
+                json=self.mock_dataframe_record,
+            )
 
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Invalid UUID format"}
+            mock_get_stream_uuid_obj.assert_called_once_with("invalid-uuid")
+            mock_get_algo_uuid_obj.assert_not_called()
+            mock_get_from_db.assert_not_called()
+            mock_update_evaluator_streamer.assert_not_called()
+
+            assert response.status_code == 400
+            assert response.json() == {"detail": "Invalid UUID format"}
 
     def test_submit_prediction_invalid_algorithm_id(self):
-        response = client.post(
-            "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/invalid-uuid/predictions",
-            json=self.mock_dataframe_record,
-        )
+        with patch(
+            "src.routers.predictions.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid_obj, patch(
+            "src.routers.predictions.get_algo_uuid_object",
+            side_effect=InvalidUUIDException("Invalid UUID format"),
+        ) as mock_get_algo_uuid_obj, patch(
+            "src.routers.predictions.get_stream_from_db",
+            return_value=self.mock_evaluator_streamer_completed,
+        ) as mock_get_from_db, patch(
+            "src.routers.predictions.update_stream", return_value=None
+        ) as mock_update_evaluator_streamer:
+            response = client.post(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/invalid-uuid/predictions",
+                json=self.mock_dataframe_record,
+            )
 
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Invalid UUID format"}
+            mock_get_stream_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_algo_uuid_obj.assert_called_once_with("invalid-uuid")
+            mock_get_from_db.assert_not_called()
+            mock_update_evaluator_streamer.assert_not_called
+
+            assert response.status_code == 400
+            assert response.json() == {"detail": "Invalid UUID format"}
 
     def test_submit_prediction_evaluator_not_found(self):
         with patch(
-            "src.routers.predictions.get_evaluator_stream_from_db", return_value=None
-        ) as mock_get_from_db:
+            "src.routers.predictions.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid_obj, patch(
+            "src.routers.predictions.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid_obj, patch(
+            "src.routers.predictions.get_stream_from_db",
+            side_effect=GetEvaluatorStreamErrorException(
+                message="EvaluatorStreamer not found", status_code=404
+            ),
+        ) as mock_get_from_db, patch(
+            "src.routers.predictions.update_stream", return_value=None
+        ) as mock_update_evaluator_streamer:
             response = client.post(
                 "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
                 json=self.mock_dataframe_record,
             )
 
+            mock_get_stream_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_algo_uuid_obj.assert_called_once_with(
+                "12345678-1234-5678-1234-567812345678"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
+            mock_update_evaluator_streamer.assert_not_called()
 
             assert response.status_code == 404
             assert response.json() == {"detail": "EvaluatorStreamer not found"}
 
     def test_submit_prediction_error_fetching_evaluator_from_db(self):
         with patch(
-            "src.routers.predictions.get_evaluator_stream_from_db",
-            side_effect=Exception("Error fetching from DB"),
-        ) as mock_get_from_db:
+            "src.routers.predictions.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid_obj, patch(
+            "src.routers.predictions.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid_obj, patch(
+            "src.routers.predictions.get_stream_from_db",
+            side_effect=GetEvaluatorStreamErrorException(),
+        ) as mock_get_from_db, patch(
+            "src.routers.predictions.update_stream", return_value=None
+        ) as mock_update_evaluator_streamer:
             response = client.post(
                 "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
                 json=self.mock_dataframe_record,
             )
 
+            mock_get_stream_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_algo_uuid_obj.assert_called_once_with(
+                "12345678-1234-5678-1234-567812345678"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
+            mock_update_evaluator_streamer.assert_not_called()
 
             assert response.status_code == 500
             assert response.json() == {
-                "detail": "Error getting evaluator stream: Error fetching from DB"
+                "detail": "Error getting evaluator stream from database"
             }
 
     def test_submit_df_prediction_data_error(self):
         with patch(
-            "src.routers.predictions.get_evaluator_stream_from_db",
+            "src.routers.predictions.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid_obj, patch(
+            "src.routers.predictions.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid_obj, patch(
+            "src.routers.predictions.get_stream_from_db",
             return_value=self.mock_evaluator_streamer_submit_prediction_error,
         ) as mock_get_from_db, patch(
+            "src.routers.predictions.update_stream", return_value=None
+        ) as mock_update_evaluator_streamer, patch(
             "src.routers.predictions.InteractionMatrix",
             return_value=self.mock_prediction_im,
         ) as mock_interaction_matrix:
@@ -189,6 +292,12 @@ class TestSubmitPrediction(unittest.TestCase):
                 json=self.mock_dataframe_record,
             )
 
+            mock_get_stream_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_algo_uuid_obj.assert_called_once_with(
+                "12345678-1234-5678-1234-567812345678"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
@@ -196,6 +305,7 @@ class TestSubmitPrediction(unittest.TestCase):
             self.mock_evaluator_streamer_submit_prediction_error.submit_prediction.assert_called_once_with(
                 UUID("12345678-1234-5678-1234-567812345678"), self.mock_prediction_im
             )
+            mock_update_evaluator_streamer.assert_not_called()
 
             assert response.status_code == 500
             assert response.json() == {
@@ -204,9 +314,17 @@ class TestSubmitPrediction(unittest.TestCase):
 
     def test_submit_csr_matrix_prediction_data_error(self):
         with patch(
-            "src.routers.predictions.get_evaluator_stream_from_db",
+            "src.routers.predictions.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid_obj, patch(
+            "src.routers.predictions.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid_obj, patch(
+            "src.routers.predictions.get_stream_from_db",
             return_value=self.mock_evaluator_streamer_submit_prediction_error,
         ) as mock_get_from_db, patch(
+            "src.routers.predictions.update_stream", return_value=None
+        ) as mock_update_evaluator_streamer, patch(
             "src.routers.predictions.InteractionMatrix",
             return_value=self.mock_prediction_im,
         ) as mock_interaction_matrix:
@@ -215,27 +333,95 @@ class TestSubmitPrediction(unittest.TestCase):
                 json=self.mock_prediction_csr_matrix,
             )
 
+            mock_get_stream_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_algo_uuid_obj.assert_called_once_with(
+                "12345678-1234-5678-1234-567812345678"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
             self.mock_evaluator_streamer_submit_prediction_error.submit_prediction.assert_called_once()
             mock_interaction_matrix.assert_not_called()
+            mock_update_evaluator_streamer.assert_not_called()
 
             assert response.status_code == 500
             assert response.json() == {
                 "detail": "Error Submitting Prediction: Error at submit_prediction()"
             }
 
+    def test_submit_prediction_update_stream_error(self):
+        with patch(
+            "src.routers.predictions.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid_obj, patch(
+            "src.routers.predictions.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid_obj, patch(
+            "src.routers.predictions.get_stream_from_db",
+            return_value=self.mock_evaluator_streamer_predicted,
+        ) as mock_get_from_db, patch(
+            "src.routers.predictions.InteractionMatrix",
+            return_value=self.mock_prediction_im,
+        ) as mock_interaction_matrix, patch(
+            "src.routers.predictions.update_stream",
+            side_effect=DatabaseErrorException("error updating stream"),
+        ) as mock_update_evaluator_streamer:
+            response = client.post(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
+                json=self.mock_dataframe_record,
+            )
+
+            mock_get_stream_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_algo_uuid_obj.assert_called_once_with(
+                "12345678-1234-5678-1234-567812345678"
+            )
+            mock_get_from_db.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+            )
+            mock_interaction_matrix.assert_called_once()
+            self.mock_evaluator_streamer_predicted.submit_prediction.assert_called_once_with(
+                UUID("12345678-1234-5678-1234-567812345678"), self.mock_prediction_im
+            )
+            self.mock_evaluator_streamer_predicted.get_algorithm_state.assert_called_once_with(
+                UUID("12345678-1234-5678-1234-567812345678")
+            )
+            mock_update_evaluator_streamer.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+                self.mock_evaluator_streamer_predicted,
+            )
+
+            assert response.status_code == 500
+            assert response.json() == {"detail": "error updating stream"}
+
     def test_submit_prediction_invalid_format(self):
         with patch(
-            "src.routers.predictions.get_evaluator_stream_from_db",
+            "src.routers.predictions.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid_obj, patch(
+            "src.routers.predictions.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid_obj, patch(
+            "src.routers.predictions.get_stream_from_db",
             return_value=self.mock_evaluator_streamer_predicted,
-        ) as mock_get_from_db:
+        ) as mock_get_from_db, patch(
+            "src.routers.predictions.update_stream", return_value=None
+        ) as mock_update_evaluator_streamer, patch(
+            "src.routers.predictions.InteractionMatrix",
+            return_value=self.mock_prediction_im,
+        ) as mock_interaction_matrix:
             response = client.post(
                 "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/predictions",
                 json={"invalid": "format"},
             )
 
+            mock_get_stream_uuid_obj.assert_not_called()
+            mock_get_algo_uuid_obj.assert_not_called()
             mock_get_from_db.assert_not_called()
+            mock_interaction_matrix.assert_not_called()
+            mock_update_evaluator_streamer.assert_not_called()
 
             assert response.status_code == 422
