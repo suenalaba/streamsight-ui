@@ -291,6 +291,30 @@ class TestGetStreamSettings(unittest.TestCase):
     def test_get_stream_settings_stream_not_found(self):
         with patch(
             "src.routers.stream_management.get_stream_from_db",
+            side_effect=GetEvaluatorStreamErrorException(
+                message="Evaluator stream not found", status_code=404
+            ),
+        ) as mock_get_from_db, patch(
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj:
+            response = client.get(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/settings"
+            )
+
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_from_db.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+            )
+
+            assert response.status_code == 404
+            assert response.json() == {"detail": "Evaluator stream not found"}
+
+    def test_get_stream_settings_get_stream_from_db_error(self):
+        with patch(
+            "src.routers.stream_management.get_stream_from_db",
             side_effect=GetEvaluatorStreamErrorException(),
         ) as mock_get_from_db, patch(
             "src.routers.stream_management.get_stream_uuid_object",
@@ -630,6 +654,4 @@ class TestStartStream(unittest.TestCase):
             )
 
             assert response.status_code == 500
-            assert response.json() == {
-                "detail": "Error Starting Stream: Update stream error"
-            }
+            assert response.json() == {"detail": "Update stream error"}
