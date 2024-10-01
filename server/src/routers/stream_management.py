@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import List, cast
-from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -19,11 +18,14 @@ from streamsight.registries.registry import MetricEntry
 from streamsight.settings import SlidingWindowSetting
 
 from src.db_utils import (
-    get_evaluator_stream_from_db,
-    update_evaluator_stream,
     write_evaluator_stream_to_db,
 )
-from src.utils.db_utils import GetEvaluatorStreamErrorException, get_stream_from_db
+from src.utils.db_utils import (
+    DatabaseErrorException,
+    GetEvaluatorStreamErrorException,
+    get_stream_from_db,
+    update_stream,
+)
 from src.utils.uuid_utils import InvalidUUIDException, get_stream_uuid_object
 
 router = APIRouter(tags=["Stream Management"])
@@ -150,23 +152,17 @@ def get_stream_settings(stream_id: str):
 @router.post("/streams/{stream_id}/start")
 def start_stream(stream_id: str):
     try:
-        evaluator_streamer_uuid = UUID(stream_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid UUID format")
-
-    try:
-        evaluator_streamer = get_evaluator_stream_from_db(evaluator_streamer_uuid)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error Getting Stream: {str(e)}")
-    if not evaluator_streamer:
-        raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
-
-    evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
-
-    try:
+        uuid_obj = get_stream_uuid_object(stream_id)
+        evaluator_streamer = get_stream_from_db(uuid_obj)
         evaluator_streamer.start_stream()
-        update_evaluator_stream(evaluator_streamer_uuid, evaluator_streamer)
+        update_stream(uuid_obj, evaluator_streamer)
         return {"status": True}
+    except (
+        InvalidUUIDException,
+        GetEvaluatorStreamErrorException,
+        DatabaseErrorException,
+    ) as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except ValueError as e:
         raise HTTPException(status_code=409, detail=f"Error Starting Stream: {str(e)}")
     except Exception as e:
