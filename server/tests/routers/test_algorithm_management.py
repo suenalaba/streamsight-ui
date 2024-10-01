@@ -5,6 +5,8 @@ from uuid import UUID
 from fastapi.testclient import TestClient
 
 from src.main import app
+from src.utils.db_utils import DatabaseErrorException, GetEvaluatorStreamErrorException
+from src.utils.uuid_utils import InvalidUUIDException
 
 client = TestClient(app)
 
@@ -28,10 +30,13 @@ class TestRegisterAlgorithm(unittest.TestCase):
 
     def test_register_algorithm_valid(self):
         with patch(
-            "src.routers.algorithm_management.get_evaluator_stream_from_db",
+            "src.routers.algorithm_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.algorithm_management.get_stream_from_db",
             return_value=self.mock_evaluator_streamer,
         ) as mock_get_from_db, patch(
-            "src.routers.algorithm_management.update_evaluator_stream",
+            "src.routers.algorithm_management.update_stream",
             return_value=None,
         ) as mock_update_evaluator_streamer:
             response = client.post(
@@ -39,6 +44,9 @@ class TestRegisterAlgorithm(unittest.TestCase):
                 json={"algorithm_name": "test_algorithm"},
             )
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
@@ -56,22 +64,40 @@ class TestRegisterAlgorithm(unittest.TestCase):
             }
 
     def test_register_algorithm_invalid_uuid(self):
-        response = client.post(
-            "/streams/invalid-uuid/algorithms",
-            json={"algorithm_name": "test_algorithm"},
-        )
+        with patch(
+            "src.routers.algorithm_management.get_stream_uuid_object",
+            side_effect=InvalidUUIDException(),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.algorithm_management.get_stream_from_db",
+            return_value=self.mock_evaluator_streamer,
+        ) as mock_get_from_db, patch(
+            "src.routers.algorithm_management.update_stream",
+            return_value=None,
+        ) as mock_update_evaluator_streamer:
+            response = client.post(
+                "/streams/invalid-uuid/algorithms",
+                json={"algorithm_name": "test_algorithm"},
+            )
 
-        self.mock_evaluator_streamer.register_algorithm.assert_not_called()
+            mock_get_uuid_obj.assert_called_once_with("invalid-uuid")
+            mock_get_from_db.assert_not_called()
+            self.mock_evaluator_streamer.register_algorithm.assert_not_called()
+            mock_update_evaluator_streamer.assert_not_called()
 
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Invalid UUID format"}
+            assert response.status_code == 400
+            assert response.json() == {"detail": "Invalid UUID format"}
 
     def test_register_algorithm_evaluator_not_found(self):
         with patch(
-            "src.routers.algorithm_management.get_evaluator_stream_from_db",
-            return_value=None,
+            "src.routers.algorithm_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.algorithm_management.get_stream_from_db",
+            side_effect=GetEvaluatorStreamErrorException(
+                message="Evaluator stream with ID not found", status_code=404
+            ),
         ) as mock_get_from_db, patch(
-            "src.routers.algorithm_management.update_evaluator_stream",
+            "src.routers.algorithm_management.update_stream",
             return_value=None,
         ) as mock_update_evaluator_streamer:
             response = client.post(
@@ -79,6 +105,9 @@ class TestRegisterAlgorithm(unittest.TestCase):
                 json={"algorithm_name": "test_algorithm"},
             )
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
@@ -86,14 +115,17 @@ class TestRegisterAlgorithm(unittest.TestCase):
             mock_update_evaluator_streamer.assert_not_called()
 
             assert response.status_code == 404
-            assert response.json() == {"detail": "EvaluatorStreamer not found"}
+            assert response.json() == {"detail": "Evaluator stream with ID not found"}
 
     def test_register_algorithm_error_getting_stream_from_db(self):
         with patch(
-            "src.routers.algorithm_management.get_evaluator_stream_from_db",
-            side_effect=Exception("Error fetching from DB"),
+            "src.routers.algorithm_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.algorithm_management.get_stream_from_db",
+            side_effect=GetEvaluatorStreamErrorException(),
         ) as mock_get_from_db, patch(
-            "src.routers.algorithm_management.update_evaluator_stream",
+            "src.routers.algorithm_management.update_stream",
             return_value=None,
         ) as mock_update_evaluator_streamer:
             response = client.post(
@@ -101,6 +133,9 @@ class TestRegisterAlgorithm(unittest.TestCase):
                 json={"algorithm_name": "test_algorithm"},
             )
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
@@ -109,15 +144,18 @@ class TestRegisterAlgorithm(unittest.TestCase):
 
             assert response.status_code == 500
             assert response.json() == {
-                "detail": "Error Getting Stream: Error fetching from DB"
+                "detail": "Error getting evaluator stream from database"
             }
 
     def test_register_algorithm_internal_error(self):
         with patch(
-            "src.routers.algorithm_management.get_evaluator_stream_from_db",
+            "src.routers.algorithm_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.algorithm_management.get_stream_from_db",
             return_value=self.mock_error_evaluator_streamer,
         ) as mock_get_from_db, patch(
-            "src.routers.algorithm_management.update_evaluator_stream",
+            "src.routers.algorithm_management.update_stream",
             return_value=None,
         ) as mock_update_evaluator_streamer:
             response = client.post(
@@ -125,6 +163,9 @@ class TestRegisterAlgorithm(unittest.TestCase):
                 json={"algorithm_name": "test_algorithm"},
             )
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
@@ -137,6 +178,39 @@ class TestRegisterAlgorithm(unittest.TestCase):
             assert response.json() == {
                 "detail": "Error registering algorithm: Error registering algorithm"
             }
+
+    def test_register_algorithm_update_stream_error(self):
+        with patch(
+            "src.routers.algorithm_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.algorithm_management.get_stream_from_db",
+            return_value=self.mock_evaluator_streamer,
+        ) as mock_get_from_db, patch(
+            "src.routers.algorithm_management.update_stream",
+            side_effect=DatabaseErrorException("error updating db"),
+        ) as mock_update_evaluator_streamer:
+            response = client.post(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms",
+                json={"algorithm_name": "test_algorithm"},
+            )
+
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_from_db.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+            )
+            self.mock_evaluator_streamer.register_algorithm.assert_called_once_with(
+                algorithm_name="test_algorithm"
+            )
+            mock_update_evaluator_streamer.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+                self.mock_evaluator_streamer,
+            )
+
+            assert response.status_code == 500
+            assert response.json() == {"detail": "error updating db"}
 
 
 class TestGetAlgorithmState(unittest.TestCase):

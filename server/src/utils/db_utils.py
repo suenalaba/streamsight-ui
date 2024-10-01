@@ -1,7 +1,7 @@
 import pickle
 import uuid
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 
 from src.database import EvaluatorStreamModel, get_sql_connection
@@ -11,6 +11,13 @@ class GetEvaluatorStreamErrorException(Exception):
     def __init__(
         self, message="Error getting evaluator stream from database", status_code=500
     ):
+        self.message = message
+        self.status_code = status_code
+        super().__init__(self.message)
+
+
+class DatabaseErrorException(Exception):
+    def __init__(self, message="Database CRUD Error", status_code=500):
         self.message = message
         self.status_code = status_code
         super().__init__(self.message)
@@ -35,4 +42,25 @@ def get_stream_from_db(stream_id: uuid.UUID) -> EvaluatorStreamer:
     except Exception as e:
         raise GetEvaluatorStreamErrorException(
             message="Error getting evaluator stream from database: " + str(e)
+        )
+
+
+def update_stream(stream_id: uuid.UUID, evaluator_streamer: EvaluatorStreamer):
+    try:
+        with Session(get_sql_connection()) as session:
+            statement = select(EvaluatorStreamModel).where(
+                EvaluatorStreamModel.stream_id == stream_id
+            )
+            results = session.exec(statement)
+            stream = results.first()
+
+            evaluator_streamer.prepare_dump()
+            stream.stream_object = pickle.dumps(evaluator_streamer)
+
+            session.add(stream)
+            session.commit()
+            session.refresh(stream)
+    except Exception as e:
+        raise DatabaseErrorException(
+            "Error updating evaluator stream in database: " + str(e)
         )
