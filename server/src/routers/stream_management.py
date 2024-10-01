@@ -17,14 +17,12 @@ from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 from streamsight.registries.registry import MetricEntry
 from streamsight.settings import SlidingWindowSetting
 
-from src.db_utils import (
-    write_evaluator_stream_to_db,
-)
 from src.utils.db_utils import (
     DatabaseErrorException,
     GetEvaluatorStreamErrorException,
     get_stream_from_db,
     update_stream,
+    write_stream_to_db,
 )
 from src.utils.uuid_utils import InvalidUUIDException, get_stream_uuid_object
 
@@ -92,7 +90,9 @@ def create_stream(stream: Stream):
 
     try:
         evaluator_streamer = EvaluatorStreamer(metrics, setting_sliding, stream.top_k)
-        stream_id = write_evaluator_stream_to_db(evaluator_streamer)
+        stream_id = write_stream_to_db(evaluator_streamer)
+    except DatabaseErrorException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error creating evaluator streamer: {str(e)}"
