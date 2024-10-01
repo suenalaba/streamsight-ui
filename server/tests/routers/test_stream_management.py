@@ -334,7 +334,7 @@ class TestGetStreamSettings(unittest.TestCase):
 
 class TestGetStream(unittest.TestCase):
     def setUp(self):
-        self.valid_mock_evaluator_stream = self.get_mock_evaluator_stream()
+        self.mock_evaluator_stream = self.get_mock_evaluator_stream()
 
     def get_mock_evaluator_stream(self):
         mock = MagicMock()
@@ -343,11 +343,17 @@ class TestGetStream(unittest.TestCase):
 
     def test_get_stream_valid(self):
         with patch(
-            "src.routers.stream_management.get_evaluator_stream_from_db",
-            return_value=self.valid_mock_evaluator_stream,
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
+            return_value=self.mock_evaluator_stream,
         ) as mock_get_from_db:
             response = client.get("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef")
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
@@ -356,38 +362,63 @@ class TestGetStream(unittest.TestCase):
             assert response.json() == 10
 
     def test_get_stream_invalid_uuid(self):
-        response = client.get("/streams/invalid_uuid")
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Invalid UUID format"}
+        with patch(
+            "src.routers.stream_management.get_stream_uuid_object",
+            side_effect=InvalidUUIDException(),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
+            return_value=self.mock_evaluator_stream,
+        ) as mock_get_from_db:
+            response = client.get("/streams/invalid_uuid")
+
+            mock_get_uuid_obj.assert_called_once_with("invalid_uuid")
+            mock_get_from_db.assert_not_called()
+
+            assert response.status_code == 400
+            assert response.json() == {"detail": "Invalid UUID format"}
 
     def test_get_stream_stream_not_found(self):
         with patch(
-            "src.routers.stream_management.get_evaluator_stream_from_db",
-            return_value=None,
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
+            side_effect=GetEvaluatorStreamErrorException(
+                message="Evaluator stream not found", status_code=404
+            ),
         ) as mock_get_from_db:
             response = client.get("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef")
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
 
             assert response.status_code == 404
-            assert response.json() == {"detail": "EvaluatorStreamer not found"}
+            assert response.json() == {"detail": "Evaluator stream not found"}
 
     def test_get_stream_failed_to_get_from_db(self):
         with patch(
-            "src.routers.stream_management.get_evaluator_stream_from_db",
-            side_effect=Exception("Failed to fetch from DB"),
+            "src.routers.stream_management.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_uuid_obj, patch(
+            "src.routers.stream_management.get_stream_from_db",
+            side_effect=GetEvaluatorStreamErrorException(),
         ) as mock_get_from_db:
             response = client.get("/streams/336e4cb7-861b-4870-8c29-3ffc530711ef")
 
+            mock_get_uuid_obj.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
             mock_get_from_db.assert_called_once_with(
                 UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
             )
 
             assert response.status_code == 500
             assert response.json() == {
-                "detail": "Error Getting Stream: Failed to fetch from DB"
+                "detail": "Error getting evaluator stream from database"
             }
 
 
