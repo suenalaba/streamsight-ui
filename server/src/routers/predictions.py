@@ -1,14 +1,22 @@
-from typing import List, Union, cast
-from uuid import UUID
+from typing import List, Union
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from scipy.sparse import csr_matrix
-from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 from streamsight.matrix import InteractionMatrix
 
-from src.db_utils import get_evaluator_stream_from_db, update_evaluator_stream
+from src.utils.db_utils import (
+    DatabaseErrorException,
+    GetEvaluatorStreamErrorException,
+    get_stream_from_db,
+    update_stream,
+)
+from src.utils.uuid_utils import (
+    InvalidUUIDException,
+    get_algo_uuid_object,
+    get_stream_uuid_object,
+)
 
 router = APIRouter(tags=["Predictions"])
 
@@ -34,31 +42,12 @@ async def submit_prediction(
     predictions: Union[List[DataframeRecord], PredictionCsrMatrix],
 ):
     try:
-        evaluator_streamer_uuid = UUID(stream_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid UUID format")
-
-    try:
-        algorithm_uuid = UUID(algorithm_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid UUID format")
-
-    try:
-        evaluator_streamer = get_evaluator_stream_from_db(evaluator_streamer_uuid)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting evaluator stream: {str(e)}"
-        )
-
-    if not evaluator_streamer:
-        raise HTTPException(status_code=404, detail="EvaluatorStreamer not found")
-
-    evaluator_streamer = cast(EvaluatorStreamer, evaluator_streamer)
-
-    if isinstance(predictions, list) and all(
-        isinstance(prediction, DataframeRecord) for prediction in predictions
-    ):
-        try:
+        evaluator_streamer_uuid = get_stream_uuid_object(stream_id)
+        algorithm_uuid = get_algo_uuid_object(algorithm_id)
+        evaluator_streamer = get_stream_from_db(evaluator_streamer_uuid)
+        if isinstance(predictions, list) and all(
+            isinstance(prediction, DataframeRecord) for prediction in predictions
+        ):
             prediction_data = [prediction.model_dump() for prediction in predictions]
             prediction_df = pd.DataFrame(prediction_data)
             prediction_im = InteractionMatrix(
@@ -70,13 +59,7 @@ async def submit_prediction(
                 "PREDICTED",
                 "COMPLETED",
             }
-            update_evaluator_stream(evaluator_streamer_uuid, evaluator_streamer)
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Error Submitting Prediction: {str(e)}"
-            )
-    elif isinstance(predictions, PredictionCsrMatrix):
-        try:
+        elif isinstance(predictions, PredictionCsrMatrix):
             prediction_csr_matrix = csr_matrix(
                 (predictions.data, predictions.indices, predictions.indptr),
                 shape=predictions.shape,
@@ -86,10 +69,16 @@ async def submit_prediction(
                 "PREDICTED",
                 "COMPLETED",
             }
-            update_evaluator_stream(evaluator_streamer_uuid, evaluator_streamer)
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Error Submitting Prediction: {str(e)}"
-            )
+        update_stream(evaluator_streamer_uuid, evaluator_streamer)
+    except (
+        InvalidUUIDException,
+        GetEvaluatorStreamErrorException,
+        DatabaseErrorException,
+    ) as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error Submitting Prediction: {str(e)}"
+        )
 
     return {"status": True}
