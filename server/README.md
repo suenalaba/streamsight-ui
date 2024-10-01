@@ -54,25 +54,23 @@ and open htmlcov/index.html in a web browser.
 We use [Ruff](https://github.com/astral-sh/ruff) as our code formatter.
 The rules can be found under `ruff.toml`. The rules are part of our pre-commit hook.
 
-#### To run ruff as a linter:
+#### Linting with ruff:
 ```
-ruff check                          # Lint all files in the current directory (and any subdirectories).
-ruff check path/to/code/            # Lint all files in `/path/to/code` (and any subdirectories).
-ruff check path/to/code/*.py        # Lint all `.py` files in `/path/to/code`.
-ruff check path/to/code/to/file.py  # Lint `file.py`.
-ruff check @arguments.txt           # Lint using an input file, treating its contents as newline-delimited command-line arguments.
+ruff check                          # Lint all files and nested files under the current directory.
+ruff check your_path                # Lint all files and nested files under `/your_path`.
+ruff check your_path/*.py           # Lint all `.py` files under `/your_path`.
+ruff check your_path/your_file.py   # Lint `your_file.py`.
+```
+NOTE: Include `--fix` to automatically fix issues.
+
+#### Formatting with ruff:
+```
+ruff format                          # Format all files and nested files under the current directory.
+ruff format your_path/               # Format all files and nested files under `/your_path`.
+ruff format your_path/*.py           # Format all `.py` files under `/your_path`.
+ruff format your_path/your_file.py   # Format `your_file.py`.
 ```
 
-#### To run ruff as a formatter:
-```
-ruff format                          # Format all files in the current directory (and any subdirectories).
-ruff format path/to/code/            # Format all files in `/path/to/code` (and any subdirectories).
-ruff format path/to/code/*.py        # Format all `.py` files in `/path/to/code`.
-ruff format path/to/code/to/file.py  # Format `file.py`.
-ruff format @arguments.txt           # Format using an input file, treating its contents as newline-delimited command-line arguments.
-```
-
-Include `--fix` to automatically fix issues.
 
 #### Commit Messages:
 Our commit messages should follow the convention of [Git Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/)
