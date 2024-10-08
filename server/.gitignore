@@ -16,3 +16,6 @@ htmlcov/
 
 # ignore ruff generated files
 .ruff_cache/
+
+# ignore environment variables
+.env
