@@ -1,11 +1,12 @@
 import os
 import uuid
 
+from dotenv import load_dotenv
 from sqlalchemy import Engine
 from sqlmodel import Field, SQLModel, create_engine
 
-# Specify the path to the .env file
 dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+load_dotenv(dotenv_path)
 
 
 class EvaluatorStreamModel(SQLModel, table=True):
