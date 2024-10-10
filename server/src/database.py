@@ -1,12 +1,9 @@
-import os
 import uuid
 
-from dotenv import load_dotenv
 from sqlalchemy import Engine
 from sqlmodel import Field, SQLModel, create_engine
 
-dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
-load_dotenv(dotenv_path)
+from src.settings import dbname, host, password, port, user
 
 
 class EvaluatorStreamModel(SQLModel, table=True):
@@ -17,11 +14,6 @@ class EvaluatorStreamModel(SQLModel, table=True):
 
 # SQL Connection
 _engine: Engine = None
-user = os.getenv("user")
-password = os.getenv("password")
-host = os.getenv("host")
-port = os.getenv("port")
-dbname = os.getenv("dbname")
 connection_string = f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
 
 
