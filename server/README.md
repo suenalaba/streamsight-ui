@@ -4,23 +4,21 @@
 
 **Pre-requisite**:
 1. Ensure that you are in the `server` directory
-2. Create a virtual environment via
+2. Our project is managed using [astral-uv](https://docs.astral.sh/uv/) ensure you have uv installed via:
 ```
-python -m venv venv
+pip install uv
 ```
-3. Activate the virtual environment
+Check out alternative installation options [here](https://docs.astral.sh/uv/getting-started/installation/)
+3. After installing uv, install dependencies using:
 ```
-source venv/bin/activate
+uv sync --all-extras
 ```
-4. Install requirements
-```
-pip install requirements.txt
-```
+- NOTE: This command will automatically create a virtual environment in the `.venv` folder.
 
 ### Development
 1. Run
 ```
-fastapi dev src/main.py
+uv run fastapi dev src/main.py
 ```
 2. Check health via: http://127.0.0.1:8000
 3. Access OPENAPI Spec via: http://127.0.0.1:8000/docs
@@ -28,25 +26,25 @@ fastapi dev src/main.py
 ### Testing
 * To run test in streamlined mode:
 ```
-pytest
+uv run pytest
 ```
 
 * To run test and include Verbose:
 ```
-pytest -s -vv
+uv run pytest -s -vv
 ```
 * To obtain test coverage:
 1. To compile coverage, run:
 ```
-coverage run -m pytest
+uv run coverage run -m pytest
 ```
 2. To get report in terminal, run:
 ```
-coverage report -m
+uv run coverage report -m
 ```
 3. To get a more comprehensive report, run:
 ```
-coverage html
+uv run coverage html
 ```
 and open htmlcov/index.html in a web browser.
 
@@ -56,19 +54,19 @@ The rules can be found under `ruff.toml`. The rules are part of our pre-commit h
 
 #### Linting with ruff:
 ```
-ruff check                          # Lint all files and nested files under the current directory.
-ruff check your_path                # Lint all files and nested files under `/your_path`.
-ruff check your_path/*.py           # Lint all `.py` files under `/your_path`.
-ruff check your_path/your_file.py   # Lint `your_file.py`.
+uv run ruff check                          # Lint all files and nested files under the current directory.
+uv run ruff check your_path                # Lint all files and nested files under `/your_path`.
+uv run ruff check your_path/*.py           # Lint all `.py` files under `/your_path`.
+uv run ruff check your_path/your_file.py   # Lint `your_file.py`.
 ```
-NOTE: Include `--fix` to automatically fix issues.
+- NOTE: Include `--fix` to automatically fix issues.
 
 #### Formatting with ruff:
 ```
-ruff format                          # Format all files and nested files under the current directory.
-ruff format your_path/               # Format all files and nested files under `/your_path`.
-ruff format your_path/*.py           # Format all `.py` files under `/your_path`.
-ruff format your_path/your_file.py   # Format `your_file.py`.
+uv run ruff format                          # Format all files and nested files under the current directory.
+uv run ruff format your_path/               # Format all files and nested files under `/your_path`.
+uv run ruff format your_path/*.py           # Format all `.py` files under `/your_path`.
+uv run ruff format your_path/your_file.py   # Format `your_file.py`.
 ```
 
 
