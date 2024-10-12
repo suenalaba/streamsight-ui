@@ -8,7 +8,7 @@
 ```
 pip install uv
 ```
-Check out alternative installation options [here](https://docs.astral.sh/uv/getting-started/installation/)
+- Check out alternative installation options [here](https://docs.astral.sh/uv/getting-started/installation/)
 3. After installing uv, install dependencies using:
 ```
 uv sync --all-extras
