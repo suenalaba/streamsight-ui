@@ -68,8 +68,7 @@ def update_stream(stream_id: uuid.UUID, evaluator_streamer: EvaluatorStreamer):
 
 def write_stream_to_db(evaluator_streamer: EvaluatorStreamer):
     try:
-        # TODO: Uncomment this when https://github.com/HiIAmTzeKean/Streamsight/pull/102 is deployed
-        # evaluator_streamer.prepare_dump()
+        evaluator_streamer.prepare_dump()
         evaluator_stream_obj = pickle.dumps(evaluator_streamer)
 
         with Session(get_sql_connection()) as session:

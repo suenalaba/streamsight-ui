@@ -67,7 +67,7 @@ SQLAlchemy==2.0.35
 sqlmodel==0.0.22
 starlette==0.38.2
 storage3==0.8.1
-streamsight==0.2.9a2
+streamsight==0.2.10
 StrEnum==0.4.15
 supabase==2.9.0
 supafunc==0.6.1
