@@ -3,7 +3,10 @@
 ## Getting Started
 
 **Pre-requisite**:
-1. Ensure that you are in the `server` directory
+1. Change directory to the root of the project and ensure that you are in the `server` directory
+```
+cd server
+```
 2. Our project is managed using [astral-uv](https://docs.astral.sh/uv/) ensure you have uv installed via:
 ```
 pip install uv
@@ -14,6 +17,10 @@ pip install uv
 uv sync --all-extras
 ```
 - NOTE: This command will automatically create a virtual environment in the `.venv` folder.
+4. Run the following command and fill in the empty `.env` details
+```
+cp .env.example .env
+```
 
 ### Development
 1. Run
