@@ -3,7 +3,6 @@ import uuid
 from sqlalchemy import Engine
 from sqlmodel import Field, SQLModel, create_engine
 
-from src.settings import dbname, password
 from src.supabase_client.client import get_supabase_client
 
 
@@ -15,8 +14,9 @@ class EvaluatorStreamModel(SQLModel, table=True):
 
 # SQL Connection
 _engine: Engine = None
-connection_string = f"postgresql://postgres:{password}@db.gbqsbltnpqzpvunwvrpy.supabase.co:5432/${dbname}"
+# connection_string = f"postgresql://postgres:{password}@db.gbqsbltnpqzpvunwvrpy.supabase.co:5432/${dbname}"
 # connection_string = f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
+connection_string = "postgresql://localhost:5432/streamsight_test"
 
 
 def get_sql_connection() -> Engine:
