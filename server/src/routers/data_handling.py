@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from src.utils.db_utils import (
     DatabaseErrorException,
@@ -16,7 +16,13 @@ router = APIRouter(tags=["Data Handling"])
 
 
 @router.get("/streams/{stream_id}/algorithms/{algorithm_id}/training-data")
-def get_training_data(stream_id: str, algorithm_id: str):
+def get_training_data(
+    stream_id: str,
+    algorithm_id: str,
+    includeAdditionalFeatures: bool = Query(
+        False, description="Include additional features in the training data"
+    ),
+):
     try:
         evaluator_streamer_uuid = get_stream_uuid_object(stream_id)
         algorithm_uuid = get_algo_uuid_object(algorithm_id)
@@ -24,7 +30,12 @@ def get_training_data(stream_id: str, algorithm_id: str):
         interaction_matrix = evaluator_streamer.get_data(algorithm_uuid)
         shape = interaction_matrix.shape
         df = interaction_matrix.copy_df()
-        df_json = df.to_dict(orient="records")
+        main_columns = ["interactionid", "uid", "iid", "ts"]
+        if includeAdditionalFeatures:
+            df_json = df.to_dict(orient="records")
+        else:
+            # only include the main columns if user does not want additional features
+            df_json = df[main_columns].to_dict(orient="records")
         update_stream(evaluator_streamer_uuid, evaluator_streamer)
     except (
         InvalidUUIDException,
@@ -41,7 +52,13 @@ def get_training_data(stream_id: str, algorithm_id: str):
 
 
 @router.get("/streams/{stream_id}/algorithms/{algorithm_id}/unlabeled-data")
-def get_unlabeled_data(stream_id: str, algorithm_id: str):
+def get_unlabeled_data(
+    stream_id: str,
+    algorithm_id: str,
+    includeAdditionalFeatures: bool = Query(
+        False, description="Include additional features in the unlabeled data"
+    ),
+):
     try:
         evaluator_streamer_uuid = get_stream_uuid_object(stream_id)
         algorithm_uuid = get_algo_uuid_object(algorithm_id)
@@ -49,7 +66,12 @@ def get_unlabeled_data(stream_id: str, algorithm_id: str):
         interaction_matrix = evaluator_streamer.get_unlabeled_data(algorithm_uuid)
         shape = interaction_matrix.shape
         df = interaction_matrix.copy_df()
-        df_json = df.to_dict(orient="records")
+        main_columns = ["interactionid", "uid", "iid", "ts"]
+        if includeAdditionalFeatures:
+            df_json = df.to_dict(orient="records")
+        else:
+            # only include the main columns if user does not want additional features
+            df_json = df[main_columns].to_dict(orient="records")
         update_stream(evaluator_streamer_uuid, evaluator_streamer)
     except (
         InvalidUUIDException,

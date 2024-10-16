@@ -26,6 +26,7 @@ class TestGetTrainingData(unittest.TestCase):
             "uid": [0, 1, 2, 0],
             "iid": [0, 0, 1, 2],
             "ts": [0, 1, 2, 3],
+            "additional_feature_1": [10, 8, 2, 6],
         }
 
         # Create the DataFrame
@@ -86,6 +87,76 @@ class TestGetTrainingData(unittest.TestCase):
                     {"interactionid": 1, "uid": 1, "iid": 0, "ts": 1},
                     {"interactionid": 2, "uid": 2, "iid": 1, "ts": 2},
                     {"interactionid": 3, "uid": 0, "iid": 2, "ts": 3},
+                ],
+            }
+
+    def test_get_training_data_additional_features(self):
+        with patch(
+            "src.routers.data_handling.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid, patch(
+            "src.routers.data_handling.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid, patch(
+            "src.routers.data_handling.get_stream_from_db",
+            return_value=self.mock_evaluator_streamer,
+        ) as mock_get_evaluator_stream_from_db, patch(
+            "src.routers.data_handling.update_stream", return_value=None
+        ) as mock_update_evaluator_stream:
+            response = client.get(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/training-data?includeAdditionalFeatures=true"
+            )
+
+            mock_get_stream_uuid.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_algo_uuid.assert_called_once_with(
+                "12345678-1234-5678-1234-567812345678"
+            )
+            mock_get_evaluator_stream_from_db.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+            )
+            self.mock_evaluator_streamer.get_data.assert_called_once_with(
+                UUID("12345678-1234-5678-1234-567812345678")
+            )
+            self.mock_interaction_matrix.copy_df.assert_called_once()
+            mock_update_evaluator_stream.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+                self.mock_evaluator_streamer,
+            )
+
+            assert response.status_code == 200
+            assert response.json() == {
+                "shape": [3, 3],
+                "training_data": [
+                    {
+                        "interactionid": 0,
+                        "uid": 0,
+                        "iid": 0,
+                        "ts": 0,
+                        "additional_feature_1": 10,
+                    },
+                    {
+                        "interactionid": 1,
+                        "uid": 1,
+                        "iid": 0,
+                        "ts": 1,
+                        "additional_feature_1": 8,
+                    },
+                    {
+                        "interactionid": 2,
+                        "uid": 2,
+                        "iid": 1,
+                        "ts": 2,
+                        "additional_feature_1": 2,
+                    },
+                    {
+                        "interactionid": 3,
+                        "uid": 0,
+                        "iid": 2,
+                        "ts": 3,
+                        "additional_feature_1": 6,
+                    },
                 ],
             }
 
@@ -298,6 +369,7 @@ class TestGetUnlabeledData(unittest.TestCase):
             "uid": [0, 1, 2, 0],
             "iid": [0, 0, 1, 2],
             "ts": [0, 1, 2, 3],
+            "additional_feature_1": [10, 8, 2, 6],
         }
 
         # Create the DataFrame
@@ -362,6 +434,80 @@ class TestGetUnlabeledData(unittest.TestCase):
                     {"interactionid": 1, "uid": 1, "iid": 0, "ts": 1},
                     {"interactionid": 2, "uid": 2, "iid": 1, "ts": 2},
                     {"interactionid": 3, "uid": 0, "iid": 2, "ts": 3},
+                ],
+            }
+
+    def test_get_unlabeled_data_endpoint_additional_features(self):
+        with patch(
+            "src.routers.data_handling.get_stream_uuid_object",
+            return_value=UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+        ) as mock_get_stream_uuid, patch(
+            "src.routers.data_handling.get_algo_uuid_object",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ) as mock_get_algo_uuid, patch(
+            "src.routers.data_handling.get_stream_from_db",
+            return_value=self.mock_evaluator_streamer,
+        ) as mock_get_evaluator_stream_from_db, patch(
+            "src.routers.data_handling.update_stream", return_value=None
+        ) as mock_update_evaluator_stream:
+            response = client.get(
+                "/streams/336e4cb7-861b-4870-8c29-3ffc530711ef/algorithms/12345678-1234-5678-1234-567812345678/unlabeled-data?includeAdditionalFeatures=true"
+            )
+
+            mock_get_stream_uuid.assert_called_once_with(
+                "336e4cb7-861b-4870-8c29-3ffc530711ef"
+            )
+            mock_get_algo_uuid.assert_called_once_with(
+                "12345678-1234-5678-1234-567812345678"
+            )
+            mock_get_evaluator_stream_from_db.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef")
+            )
+            self.mock_evaluator_streamer.get_unlabeled_data.assert_called_once_with(
+                UUID("12345678-1234-5678-1234-567812345678")
+            )
+            self.mock_interaction_matrix.copy_df.assert_called_once()
+            mock_update_evaluator_stream.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+                self.mock_evaluator_streamer,
+            )
+            mock_update_evaluator_stream.assert_called_once_with(
+                UUID("336e4cb7-861b-4870-8c29-3ffc530711ef"),
+                self.mock_evaluator_streamer,
+            )
+
+            assert response.status_code == 200
+            assert response.json() == {
+                "shape": [3, 3],
+                "unlabeled_data": [
+                    {
+                        "interactionid": 0,
+                        "uid": 0,
+                        "iid": 0,
+                        "ts": 0,
+                        "additional_feature_1": 10,
+                    },
+                    {
+                        "interactionid": 1,
+                        "uid": 1,
+                        "iid": 0,
+                        "ts": 1,
+                        "additional_feature_1": 8,
+                    },
+                    {
+                        "interactionid": 2,
+                        "uid": 2,
+                        "iid": 1,
+                        "ts": 2,
+                        "additional_feature_1": 2,
+                    },
+                    {
+                        "interactionid": 3,
+                        "uid": 0,
+                        "iid": 2,
+                        "ts": 3,
+                        "additional_feature_1": 6,
+                    },
                 ],
             }
 
