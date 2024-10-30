@@ -30,6 +30,13 @@ uv run fastapi dev src/main.py
 2. Check health via: http://127.0.0.1:8000
 3. Access OPENAPI Spec via: http://127.0.0.1:8000/docs
 
+### Migrations
+- For updating database with additional data attributes
+1. In root directory run 
+```
+uv run python3 -m migrations.scripts.<script_name>
+```
+
 ### Testing
 * To run test in streamlined mode:
 ```
