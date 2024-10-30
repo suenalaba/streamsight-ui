@@ -2,16 +2,20 @@ import csv
 import os
 import shutil
 import zipfile
+from typing import Dict, List
 
+import pandas as pd
 import requests
 from sqlalchemy import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
+
+from migrations.utils.preprocess_df import map_user_and_item_ids
 
 DATASET_URL = "http://files.grouplens.org/datasets/movielens/ml-100k.zip"
 ZIP_PATH = "migrations/datasets/ml-100k.zip"
 DATASET_DIR = "migrations/datasets"
 EXTRACTED_DATASETS_PATH = "migrations/datasets/ml-100k"
-FILENAMES = ["ml-100k/u.user", "ml-100k/u.item"]
+FILENAMES = ["ml-100k/u.user", "ml-100k/u.item", "ml-100k/u.data"]
 _ENGINE: Engine = None
 CONNECTION_STRING = "postgresql://localhost:5432/streamsight_test"
 
@@ -54,9 +58,13 @@ class MovieLens100kItem(SQLModel, table=True):
 def main():
     try:
         download_dataset()
-        extract_user_and_item_attributes()
-        users = read_users_attributes()
-        items = read_items_attributes()
+        extract_files()
+        df = get_interaction_dataframe()
+        user_id_mapping, item_id_mapping = map_user_and_item_ids(
+            df, "user_id", "item_id", "timestamp"
+        )
+        users = read_users_attributes(user_id_mapping)
+        items = read_items_attributes(item_id_mapping)
         with Session(get_sql_connection()) as session:
             session.add_all(users)
             session.add_all(items)
@@ -75,7 +83,7 @@ def download_dataset():
     print("Download completed.")
 
 
-def extract_user_and_item_attributes():
+def extract_files():
     with zipfile.ZipFile(ZIP_PATH, "r") as zip_ref:
         for file_name in FILENAMES:
             zip_ref.extract(file_name, path=DATASET_DIR)
@@ -90,12 +98,24 @@ def get_sql_connection() -> Engine:
     return _ENGINE
 
 
-def read_users_attributes():
+def get_interaction_dataframe() -> pd.DataFrame:
+    with open(EXTRACTED_DATASETS_PATH + "/u.data", "r") as file:
+        rows = csv.reader(file, delimiter="\t")
+        interactions = [
+            (int(row[0]), int(row[1]), int(row[2]), int(row[3])) for row in rows
+        ]
+        df = pd.DataFrame(
+            interactions, columns=["user_id", "item_id", "rating", "timestamp"]
+        )
+        return df
+
+
+def read_users_attributes(user_id_mapping: Dict[int, int]) -> List[MovieLens100kUser]:
     with open(EXTRACTED_DATASETS_PATH + "/u.user", "r") as file:
         rows = csv.reader(file, delimiter="|")
         users = [
             MovieLens100kUser(
-                user_id=int(row[0]),
+                user_id=user_id_mapping[int(row[0])],
                 age=int(row[1]),
                 gender=row[2],
                 occupation=row[3],
@@ -106,14 +126,14 @@ def read_users_attributes():
         return users
 
 
-def read_items_attributes():
+def read_items_attributes(item_id_mapping: Dict[int, int]) -> List[MovieLens100kItem]:
     with open(EXTRACTED_DATASETS_PATH + "/u.item", "r", encoding="ISO-8859-1") as file:
         rows = csv.reader(file, delimiter="|")
         movies = []
         for row in rows:
             genres = row[5:]
             movie = MovieLens100kItem(
-                movie_id=int(row[0]),
+                movie_id=item_id_mapping[int(row[0])],
                 title=row[1],
                 release_date=row[2],
                 video_release_date=row[3],
