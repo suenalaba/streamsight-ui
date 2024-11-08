@@ -10,6 +10,8 @@ from streamsight.datasets import (
     AmazonComputerDataset,
     AmazonMovieDataset,
     AmazonMusicDataset,
+    LastFMDataset,
+    MovieLens100K,
     TestDataset,
     YelpDataset,
 )
@@ -35,6 +37,8 @@ dataset_map = {
     "amazon_movie": AmazonMovieDataset,
     "yelp": YelpDataset,
     "test": TestDataset,
+    "movielens": MovieLens100K,
+    "lastfm": LastFMDataset,
 }
 
 
