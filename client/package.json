@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "prettier:check": "prettier --check \"**/*.{ts,tsx}\"",
+    "prettier:write": "prettier --write \"**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit",
+    "lint": "npm run eslint && npm run stylelint",
+    "eslint": "next lint",
+    "stylelint": "stylelint '**/*.css' --cache"
   },
   "dependencies": {
     "@mantine/core": "^7.14.3",
@@ -16,15 +21,25 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.0",
+    "@types/eslint-plugin-jsx-a11y": "^6.10.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^8",
+    "eslint": "^9.16.0",
+    "eslint-config-mantine": "^4.0.3",
     "eslint-config-next": "15.0.4",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.2",
     "postcss": "^8.4.49",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
+    "prettier": "^3.4.2",
+    "stylelint": "^16.11.0",
+    "stylelint-config-standard-scss": "^14.0.0",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "typescript-eslint": "^8.18.0"
   }
 }
