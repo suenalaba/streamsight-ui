@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.events import lifespan
 from src.routers import (
@@ -12,10 +13,24 @@ from src.routers import (
 
 app = FastAPI(lifespan=lifespan)
 
+origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/", tags=["Healthcheck"])
 def healthcheck():
-    return {"Server is running, STATUS": "HEALTHY"}
+    return {"Status": "HEALTHY"}
 
 
 app.include_router(stream_management.router)
