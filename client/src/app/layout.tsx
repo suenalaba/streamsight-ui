@@ -11,6 +11,10 @@ import {
   Text,
 } from '@mantine/core';
 import Navbar from '@/components/Navbar/Navbar';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
+
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 export const metadata = {
   title: 'My Mantine app',
