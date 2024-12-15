@@ -39,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   size="xl"
                   fw={900}
                   variant="gradient"
-                  gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+                  gradient={{ from: '#1c7ed6', to: '#22b8cf' }}
                 >
                   Streamsight-UI
                 </Text>

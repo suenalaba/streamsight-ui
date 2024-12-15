@@ -88,7 +88,8 @@ const Form = () => {
       />
 
       <Group justify="flex-end" mt="md">
-        <Button type="submit">Create Stream</Button>
+        <Button type="submit" variant="gradient"
+          gradient={{ from: '#1c7ed6', to: '#22b8cf' }}>Create Stream</Button>
       </Group>
     </form>
   );
