@@ -1,5 +1,7 @@
 import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
 
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import {
   AppShell,
   AppShellHeader,
@@ -10,9 +12,8 @@ import {
   MantineProvider,
   Text,
 } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import Navbar from '@/components/Navbar/Navbar';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <MantineProvider>
+          <Notifications />
           <AppShell
             header={{ height: 60 }}
             navbar={{
@@ -50,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </Group>
             </AppShellHeader>
             <AppShellNavbar p="md">
-              <Navbar/>
+              <Navbar />
             </AppShellNavbar>
             <AppShellMain>{children}</AppShellMain>
           </AppShell>
