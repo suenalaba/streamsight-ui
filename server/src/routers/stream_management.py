@@ -23,6 +23,7 @@ from src.utils.db_utils import (
     DatabaseErrorException,
     GetEvaluatorStreamErrorException,
     get_stream_from_db,
+    get_stream_from_db_with_dataset_id,
     update_stream,
     write_stream_to_db,
 )
@@ -94,7 +95,7 @@ def create_stream(stream: Stream):
 
     try:
         evaluator_streamer = EvaluatorStreamer(metrics, setting_sliding, stream.top_k)
-        stream_id = write_stream_to_db(evaluator_streamer)
+        stream_id = write_stream_to_db(evaluator_streamer, stream.dataset_id)
     except DatabaseErrorException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
@@ -120,7 +121,7 @@ def get_stream(stream_id: str):
 def get_stream_settings(stream_id: str):
     try:
         uuid_obj = get_stream_uuid_object(stream_id)
-        evaluator_streamer = get_stream_from_db(uuid_obj)
+        evaluator_streamer, dataset_id = get_stream_from_db_with_dataset_id(uuid_obj)
         if evaluator_streamer.setting._sliding_window_setting:
             sliding_window_setting = cast(
                 SlidingWindowSetting, evaluator_streamer.setting
@@ -130,12 +131,15 @@ def get_stream_settings(stream_id: str):
             window_size = sliding_window_setting.window_size
             background_t = sliding_window_setting.t
             top_k = sliding_window_setting.top_K
+            metric_names = [entry.name for entry in evaluator_streamer.metric_entries]
 
             data = {
                 "n_seq_data": n_seq_data,
                 "window_size": window_size,
                 "background_t": background_t,
                 "top_k": top_k,
+                "metrics": metric_names,
+                "dataset_id": dataset_id,
             }
 
             json_data = jsonable_encoder(data)

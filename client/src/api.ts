@@ -1,4 +1,4 @@
-import { CreateStreamRequest, CreateStreamResponse } from './types';
+import { CreateStreamRequest, CreateStreamResponse, StreamSettings } from './types';
 
 const BASE_URL = 'http://127.0.0.1:8000';
 
@@ -22,3 +22,14 @@ export const createStream = async (data: CreateStreamRequest): Promise<CreateStr
     const json = await response.json();
     return json;
 };
+
+export const getStreamSettings = async (streamId: string): Promise<StreamSettings> => {
+  const response = await fetch(`${BASE_URL}/streams/${streamId}/settings`);
+  
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
+  }
+
+  const json = await response.json();
+  return json;
+}
