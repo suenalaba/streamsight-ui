@@ -7,6 +7,8 @@ import { notifications } from '@mantine/notifications';
 import { getStreamSettings } from '@/api';
 import { StreamSettings } from '@/types';
 import classes from './page.module.css';
+import { RegisterAlgoFormProvider, useRegisterAlgoForm } from '@/components/RegisterAlgoForm/RegisterAlgoFormContext';
+import RegisterAlgoForm from '@/components/RegisterAlgoForm/RegisterAlgoForm';
 
 const algorithmStatuses = [
   { algoId: 'algo1', status: 'running' },
@@ -55,6 +57,17 @@ const page = () => {
     }
   }, [streamId]);
 
+  const form = useRegisterAlgoForm({
+    mode: 'uncontrolled',
+    initialValues: {
+      algorithm_name: '',
+    },
+
+    validate: {
+      algorithm_name: (value) => (value ? null : 'Algorithm Name is required'),
+    },
+  });
+
   const rows = algorithmStatuses.map((element) => (
     <Table.Tr key={`${element.algoId} _status`}>
       <Table.Td>{element.algoId}</Table.Td>
@@ -100,6 +113,9 @@ const page = () => {
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>
         </Table>
+        <RegisterAlgoFormProvider form={form}>
+          <RegisterAlgoForm/>
+        </RegisterAlgoFormProvider>
       </Container>
 
       <Container size="lg" style={{ marginLeft: 0, paddingLeft: 0, marginTop: 20 }}>

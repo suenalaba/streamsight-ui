@@ -19,3 +19,11 @@ export interface StreamSettings {
   window_size: number;
   n_seq_data: number;
 }
+
+export interface RegisterAlgorithmRequest {
+  algorithm_name: string;
+}
+
+export interface RegisterAlgorithmResponse {
+  algorithm_id: string;
+}
