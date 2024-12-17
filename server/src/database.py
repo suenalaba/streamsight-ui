@@ -10,6 +10,7 @@ class EvaluatorStreamModel(SQLModel, table=True):
     __tablename__ = "streams"
     stream_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     stream_object: bytes
+    dataset_id: str
 
 
 # SQL Connection

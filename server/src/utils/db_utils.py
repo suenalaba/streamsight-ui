@@ -1,5 +1,6 @@
 import pickle
 import uuid
+from typing import Tuple
 
 from sqlmodel import Session, SQLModel, select
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
@@ -45,6 +46,30 @@ def get_stream_from_db(stream_id: uuid.UUID) -> EvaluatorStreamer:
         )
 
 
+def get_stream_from_db_with_dataset_id(
+    stream_id: uuid.UUID,
+) -> Tuple[EvaluatorStreamer, str]:
+    try:
+        with Session(get_sql_connection()) as session:
+            evaluator_stream = session.get(EvaluatorStreamModel, stream_id)
+            if not evaluator_stream:
+                raise GetEvaluatorStreamErrorException(
+                    message=f"Evaluator stream with ID {stream_id} not found",
+                    status_code=404,
+                )
+            eval_streamer: EvaluatorStreamer = pickle.loads(
+                evaluator_stream.stream_object
+            )
+            eval_streamer.restore()
+            return eval_streamer, evaluator_stream.dataset_id
+    except GetEvaluatorStreamErrorException as e:
+        raise e
+    except Exception as e:
+        raise GetEvaluatorStreamErrorException(
+            message="Error getting evaluator stream from database: " + str(e)
+        )
+
+
 def update_stream(stream_id: uuid.UUID, evaluator_streamer: EvaluatorStreamer):
     try:
         with Session(get_sql_connection()) as session:
@@ -66,13 +91,15 @@ def update_stream(stream_id: uuid.UUID, evaluator_streamer: EvaluatorStreamer):
         )
 
 
-def write_stream_to_db(evaluator_streamer: EvaluatorStreamer):
+def write_stream_to_db(evaluator_streamer: EvaluatorStreamer, dataset_id: str):
     try:
         evaluator_streamer.prepare_dump()
         evaluator_stream_obj = pickle.dumps(evaluator_streamer)
 
         with Session(get_sql_connection()) as session:
-            new_stream = EvaluatorStreamModel(stream_object=evaluator_stream_obj)
+            new_stream = EvaluatorStreamModel(
+                stream_object=evaluator_stream_obj, dataset_id=dataset_id
+            )
             session.add(new_stream)
             session.commit()
             return new_stream.stream_id
