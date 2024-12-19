@@ -5,11 +5,12 @@ interface CellButtonProps {
   color: string;
   disabled?: boolean;
   label: string;
+  handleClick: () => void;
 }
 
-const CellButton = ({ color, disabled, label }: CellButtonProps) => {
+const CellButton = ({ color, disabled, label, handleClick }: CellButtonProps) => {
   return (
-    <Button variant="filled" color={color} disabled={disabled}>
+    <Button onClick={handleClick} variant="filled" color={color} disabled={disabled}>
       {label}
     </Button>
   );

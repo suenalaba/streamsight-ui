@@ -12,9 +12,11 @@ import { AgGridReact } from 'ag-grid-react';
 import { Title } from '@mantine/core';
 import CellButton from '@/components/AgGridCell/CellButton';
 import CellLink from '@/components/AgGridCell/CellLink';
-import { getUserStreamStatuses } from '@/api';
+import { getUserStreamStatuses, startStream } from '@/api';
 import { StreamStatus } from '@/types';
 import { StreamStatusEnum } from '@/enum';
+import { notifications } from '@mantine/notifications';
+import classes from './page.module.css';
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
@@ -49,6 +51,7 @@ const page = () => {
         color: 'teal',
         label: 'Start Stream',
         disabled: params.data.status !== StreamStatusEnum.NOT_STARTED,
+        handleClick: () => handleCellButtonClick(params.data.stream_id),
       }),
     },
   ] as ColDef[]);
@@ -65,6 +68,31 @@ const page = () => {
   const onGridReady = useCallback(() => {
     getUserStreamStatuses().then((streamStatuses) => setRowData(streamStatuses));
   }, []);
+
+  const handleCellButtonClick = async (streamId: string) => {
+    try {
+      const startStreamResponse = await startStream(streamId);
+      if (startStreamResponse.status) {
+        onGridReady();
+        notifications.show({
+          color: 'green',
+          title: 'Stream started',
+          message: `Stream ${streamId} has been started`,
+          classNames: classes,
+        })
+      } else {
+        throw new Error(`Failed to start stream ${streamId}`);
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+        notifications.show({
+          color: 'red',
+          title: 'Failed to start stream',
+          message: errorMessage,
+          classNames: classes,
+        });
+    }
+  }
 
   return (
     <>
