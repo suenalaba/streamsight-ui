@@ -13,6 +13,12 @@ class EvaluatorStreamModel(SQLModel, table=True):
     dataset_id: str
 
 
+class UserToStreamModel(SQLModel, table=True):
+    __tablename__ = "user_to_streams"
+    user_id: str = Field(primary_key=True)
+    stream_id: uuid.UUID = Field(primary_key=True)
+
+
 # SQL Connection
 _engine: Engine = None
 # connection_string = f"postgresql://postgres:{password}@db.gbqsbltnpqzpvunwvrpy.supabase.co:5432/${dbname}"

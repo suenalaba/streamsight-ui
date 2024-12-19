@@ -19,12 +19,15 @@ from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 from streamsight.registries.registry import MetricEntry
 from streamsight.settings import SlidingWindowSetting
 
+from src.constants import TEST_USER_ID
 from src.utils.db_utils import (
     DatabaseErrorException,
     GetEvaluatorStreamErrorException,
     get_stream_from_db,
     get_stream_from_db_with_dataset_id,
+    get_user_stream_ids_from_db,
     update_stream,
+    update_user_stream_mappings,
     write_stream_to_db,
 )
 from src.utils.uuid_utils import InvalidUUIDException, get_stream_uuid_object
@@ -56,6 +59,11 @@ class Stream(BaseModel):
     background_t: int
     window_size: int
     n_seq_data: int
+
+
+class StreamStatus(BaseModel):
+    stream_id: str
+    status: str
 
 
 @router.post("/streams")
@@ -96,6 +104,7 @@ def create_stream(stream: Stream):
     try:
         evaluator_streamer = EvaluatorStreamer(metrics, setting_sliding, stream.top_k)
         stream_id = write_stream_to_db(evaluator_streamer, stream.dataset_id)
+        update_user_stream_mappings(TEST_USER_ID, stream_id)
     except DatabaseErrorException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
@@ -106,15 +115,42 @@ def create_stream(stream: Stream):
     return {"evaluator_stream_id": stream_id}
 
 
-@router.get("/streams/{stream_id}")
-def get_stream(stream_id: str):
+@router.get("/streams/{stream_id}/status")
+def get_stream_status(stream_id: str):
     try:
         uuid_obj = get_stream_uuid_object(stream_id)
         evaluator_streamer = get_stream_from_db(uuid_obj)
+        if not evaluator_streamer.has_started:
+            return StreamStatus(stream_id=stream_id, status="NOT_STARTED")
+        for value in evaluator_streamer.get_all_algorithm_status().values():
+            if value.name != "COMPLETED":
+                return StreamStatus(stream_id=stream_id, status="IN_PROGRESS")
     except (InvalidUUIDException, GetEvaluatorStreamErrorException) as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
 
-    return evaluator_streamer.metric_k
+    return StreamStatus(stream_id=stream_id, status="COMPLETED")
+
+
+@router.get("/streams/user")
+def get_user_stream_statuses():
+    # TODO: Get user-id from header
+    stream_statuses: list[StreamStatus] = []
+    try:
+        stream_uuid_objs = get_user_stream_ids_from_db(TEST_USER_ID)
+        for stream_uuid_obj in stream_uuid_objs:
+            evaluator_streamer = get_stream_from_db(stream_uuid_obj)
+            status = "COMPLETED"
+            if not evaluator_streamer.has_started:
+                status = "NOT_STARTED"
+            for value in evaluator_streamer.get_all_algorithm_status().values():
+                if value.name != "COMPLETED":
+                    status = "IN_PROGRESS"
+            stream_statuses.append(
+                StreamStatus(stream_id=str(stream_uuid_obj), status=status)
+            )
+        return stream_statuses
+    except (InvalidUUIDException, GetEvaluatorStreamErrorException) as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
 @router.get("/streams/{stream_id}/settings")
