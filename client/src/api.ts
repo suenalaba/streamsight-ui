@@ -1,4 +1,4 @@
-import { CreateStreamRequest, CreateStreamResponse, RegisterAlgorithmRequest, RegisterAlgorithmResponse, StreamSettings } from './types';
+import { AlgorithmUuidToState, CreateStreamRequest, CreateStreamResponse, RegisterAlgorithmRequest, RegisterAlgorithmResponse, StreamSettings } from './types';
 
 const BASE_URL = 'http://127.0.0.1:8000';
 
@@ -42,6 +42,17 @@ export const registerAlgorithm = async (streamId: string, data: RegisterAlgorith
       'Content-Type': 'application/json',
     },
   });
+
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
+  }
+
+  const json = await response.json();
+  return json;
+}
+
+export const getAlgorithmStates = async (streamId: string): Promise<AlgorithmUuidToState[]> => {
+  const response = await fetch(`${BASE_URL}/streams/${streamId}/algorithms/state`);
 
   if (!response.ok) {
     throw new Error(`Response status: ${response.status}`);
