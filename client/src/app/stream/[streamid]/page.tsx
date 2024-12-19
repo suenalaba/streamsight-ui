@@ -4,18 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Container, Flex, Table, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { getStreamSettings } from '@/api';
-import { StreamSettings } from '@/types';
+import { getAlgorithmStates, getStreamSettings } from '@/api';
+import { AlgorithmUuidToState, StreamSettings } from '@/types';
 import classes from './page.module.css';
 import { RegisterAlgoFormProvider, useRegisterAlgoForm } from '@/components/RegisterAlgoForm/RegisterAlgoFormContext';
 import RegisterAlgoForm from '@/components/RegisterAlgoForm/RegisterAlgoForm';
-
-const algorithmStatuses = [
-  { algoId: 'algo1', status: 'running' },
-  { algoId: 'algo2', status: 'stopped' },
-  { algoId: 'algo3', status: 'running' },
-  { algoId: 'algo4', status: 'stopped' },
-];
 
 const microResults = [
   { algoId: 'algo1', metric: 'PrecisionK', value: 0.5, num_user: 3 },
@@ -36,6 +29,7 @@ const page = () => {
   const streamId = params.streamid;
 
   const [streamSettings, setStreamSettings] = useState<StreamSettings | null>(null);
+  const [algorithmStates, setAlgorithmStates] = useState<AlgorithmUuidToState[]>([]);
 
   useEffect(() => {
     const fetchStreamSettings = async () => {
@@ -52,8 +46,23 @@ const page = () => {
       }
     };
 
+    const fetchAlgorithmStates = async () => {
+      try {
+        setAlgorithmStates(await getAlgorithmStates(streamId));
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        notifications.show({
+          color: 'red',
+          title: 'Failed to get algorithm states',
+          message: errorMessage,
+          classNames: classes,
+        });
+      }
+    }
+
     if (streamId) {
       fetchStreamSettings();
+      fetchAlgorithmStates();
     }
   }, [streamId]);
 
@@ -68,10 +77,11 @@ const page = () => {
     },
   });
 
-  const rows = algorithmStatuses.map((element) => (
-    <Table.Tr key={`${element.algoId} _status`}>
-      <Table.Td>{element.algoId}</Table.Td>
-      <Table.Td>{element.status}</Table.Td>
+  const rows = algorithmStates.map((algorithmState) => (
+    <Table.Tr key={`${algorithmState.algorithm_uuid} _status`}>
+      <Table.Td>{algorithmState.algorithm_uuid}</Table.Td>
+      <Table.Td>{algorithmState.algorithm_name}</Table.Td>
+      <Table.Td>{algorithmState.state}</Table.Td>
     </Table.Tr>
   ));
 
@@ -108,6 +118,7 @@ const page = () => {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Algorithm ID</Table.Th>
+              <Table.Th>Algorithm Name</Table.Th>
               <Table.Th>Status</Table.Th>
             </Table.Tr>
           </Table.Thead>

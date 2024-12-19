@@ -7,6 +7,7 @@ from src.utils.db_utils import (
     get_stream_from_db,
     update_stream,
 )
+from src.utils.string_utils import split_string_by_last_underscore
 from src.utils.uuid_utils import (
     InvalidUUIDException,
     get_algo_uuid_object,
@@ -65,10 +66,14 @@ def get_all_algorithm_state(stream_id: str):
     try:
         evaluator_streamer_uuid = get_stream_uuid_object(stream_id)
         evaluator_streamer = get_stream_from_db(evaluator_streamer_uuid)
-        algorithm_states = {
-            key: value.name
+        algorithm_states = [
+            {
+                "algorithm_uuid": split_string_by_last_underscore(key)[1],
+                "algorithm_name": split_string_by_last_underscore(key)[0],
+                "state": value.name,
+            }
             for key, value in evaluator_streamer.get_all_algorithm_status().items()
-        }
+        ]
     except (InvalidUUIDException, GetEvaluatorStreamErrorException) as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
@@ -76,7 +81,7 @@ def get_all_algorithm_state(stream_id: str):
             status_code=500, detail=f"Error getting all algorithm states: {str(e)}"
         )
 
-    return {"algorithm_states": algorithm_states}
+    return algorithm_states
 
 
 @router.get("/streams/{stream_id}/algorithms/{algorithm_id}/is-completed")

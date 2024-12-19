@@ -19,6 +19,11 @@ const RegisterAlgoForm = () => {
     setRegisteredAlgorithmName(value);
   });
 
+  const handleModalClose = () => {
+    close();
+    window.location.reload();
+  };
+
   const handleSubmit = async (values: RegisterAlgoFormValues) => {
     try {
       const registerAlgorithmResponse = await registerAlgorithm(streamId, values);
@@ -40,7 +45,7 @@ const RegisterAlgoForm = () => {
     <>
       <Modal
         opened={opened}
-        onClose={close}
+        onClose={handleModalClose}
         size="lg"
         title="Algorithm Registered"
         overlayProps={{
@@ -57,9 +62,7 @@ const RegisterAlgoForm = () => {
             </Text>
           </Flex>
           <Flex gap="sm">
-          <Text>
-            Algorithm ID:{' '}
-          </Text>
+            <Text>Algorithm ID: </Text>
             <Text variant="gradient" gradient={{ from: 'blue', to: 'cyan', deg: 90 }}>
               {registeredAlgorithmId}
             </Text>

@@ -1,3 +1,5 @@
+import { AlgorithmState } from './enum';
+
 export interface CreateStreamRequest {
   dataset_id: string;
   top_k: number;
@@ -25,5 +27,11 @@ export interface RegisterAlgorithmRequest {
 }
 
 export interface RegisterAlgorithmResponse {
-  algorithm_id: string;
+  algorithm_uuid: string;
+}
+
+export interface AlgorithmUuidToState {
+  algorithm_uuid: string;
+  algorithm_name: string;
+  state: AlgorithmState;
 }
