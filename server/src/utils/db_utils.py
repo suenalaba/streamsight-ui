@@ -5,7 +5,7 @@ from typing import Tuple
 from sqlmodel import Session, SQLModel, select
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 
-from src.database import EvaluatorStreamModel, get_sql_connection
+from src.database import EvaluatorStreamModel, UserToStreamModel, get_sql_connection
 
 
 class GetEvaluatorStreamErrorException(Exception):
@@ -118,3 +118,30 @@ def get_metadata_from_db(metadata_model: SQLModel) -> list[SQLModel]:
             return metadata
     except Exception as e:
         raise DatabaseErrorException("Error getting metadata from database: " + str(e))
+
+
+def get_user_stream_ids_from_db(user_id: str) -> list[uuid.UUID]:
+    try:
+        with Session(get_sql_connection()) as session:
+            statement = select(UserToStreamModel).where(
+                UserToStreamModel.user_id == user_id
+            )
+            query_results = session.exec(statement)
+            results = query_results.all()
+            return [result.stream_id for result in results]
+    except Exception as e:
+        raise DatabaseErrorException(
+            "Error getting user stream IDs from database: " + str(e)
+        )
+
+
+def update_user_stream_mappings(user_id: str, stream_id: str):
+    try:
+        with Session(get_sql_connection()) as session:
+            new_mapping = UserToStreamModel(user_id=user_id, stream_id=stream_id)
+            session.add(new_mapping)
+            session.commit()
+    except Exception as e:
+        raise DatabaseErrorException(
+            "Error updating user stream mappings in database: " + str(e)
+        )

@@ -12,25 +12,16 @@ import { AgGridReact } from 'ag-grid-react';
 import { Title } from '@mantine/core';
 import CellButton from '@/components/AgGridCell/CellButton';
 import CellLink from '@/components/AgGridCell/CellLink';
-
-interface IRow {
-  streamId: string;
-  streamStatus: string;
-}
-
-const streamSettingsData = [
-  { streamId: 'stream1', streamStatus: 'started' },
-  { streamId: 'stream2', streamStatus: 'not_started' },
-  { streamId: 'stream3', streamStatus: 'started' },
-  { streamId: 'stream4', streamStatus: 'not_started' },
-];
+import { getUserStreamStatuses } from '@/api';
+import { StreamStatus } from '@/types';
+import { StreamStatusEnum } from '@/enum';
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 const page = () => {
   const containerStyle = useMemo(() => ({ width: '100%', height: 500 }), []);
   const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), []);
-  const [rowData, setRowData] = useState<any[]>([] as IRow[]);
+  const [rowData, setRowData] = useState<StreamStatus[]>([]);
   const defaultColDef = useMemo<ColDef>(() => {
     return {
       flex: 10,
@@ -38,16 +29,16 @@ const page = () => {
   }, []);
   const [columnDefs] = useState<ColDef[]>([
     {
-      field: 'streamId',
+      field: 'stream_id',
       headerName: 'Stream ID',
       cellRenderer: CellLink,
       cellRendererParams: (params: ICellRendererParams) => ({
-        href: `/stream/${params.data.streamId}`,
-        label: params.data.streamId,
+        href: `/stream/${params.data.stream_id}`,
+        label: params.data.stream_id,
       }),
     },
     {
-      field: 'streamStatus',
+      field: 'status',
       headerName: 'Stream Status',
     },
     {
@@ -57,7 +48,7 @@ const page = () => {
       cellRendererParams: (params: ICellRendererParams) => ({
         color: 'teal',
         label: 'Start Stream',
-        disabled: params.data.streamStatus === 'started',
+        disabled: params.data.status !== StreamStatusEnum.NOT_STARTED,
       }),
     },
   ] as ColDef[]);
@@ -72,7 +63,7 @@ const page = () => {
   });
 
   const onGridReady = useCallback(() => {
-    setRowData(streamSettingsData);
+    getUserStreamStatuses().then((streamStatuses) => setRowData(streamStatuses));
   }, []);
 
   return (

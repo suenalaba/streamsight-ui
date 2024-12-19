@@ -1,4 +1,4 @@
-import { AlgorithmState } from './enum';
+import { AlgorithmState, StreamStatusEnum } from './enum';
 
 export interface CreateStreamRequest {
   dataset_id: string;
@@ -34,4 +34,9 @@ export interface AlgorithmUuidToState {
   algorithm_uuid: string;
   algorithm_name: string;
   state: AlgorithmState;
+}
+
+export interface StreamStatus {
+  stream_id: string;
+  status: StreamStatusEnum;
 }
