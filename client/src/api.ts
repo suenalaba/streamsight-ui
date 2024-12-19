@@ -1,4 +1,4 @@
-import { AlgorithmUuidToState, CreateStreamRequest, CreateStreamResponse, RegisterAlgorithmRequest, RegisterAlgorithmResponse, StreamSettings, StreamStatus } from './types';
+import { AlgorithmUuidToState, CreateStreamRequest, CreateStreamResponse, RegisterAlgorithmRequest, RegisterAlgorithmResponse, StartStreamResponse, StreamSettings, StreamStatus } from './types';
 
 const BASE_URL = 'http://127.0.0.1:8000';
 
@@ -22,6 +22,19 @@ export const createStream = async (data: CreateStreamRequest): Promise<CreateStr
     const json = await response.json();
     return json;
 };
+
+export const startStream = async (streamId: string): Promise<StartStreamResponse> => {
+  const response = await fetch(`${BASE_URL}/streams/${streamId}/start`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
+  }
+
+  const json = await response.json();
+  return json;
+}
 
 export const getStreamSettings = async (streamId: string): Promise<StreamSettings> => {
   const response = await fetch(`${BASE_URL}/streams/${streamId}/settings`);

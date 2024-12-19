@@ -13,6 +13,10 @@ export interface CreateStreamResponse {
   evaluator_stream_id: string;
 }
 
+export interface StartStreamResponse {
+  status: boolean;
+}
+
 export interface StreamSettings {
   dataset_id: string;
   top_k: number;
