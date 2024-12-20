@@ -44,3 +44,23 @@ export interface StreamStatus {
   stream_id: string;
   status: StreamStatusEnum;
 }
+
+interface Metric {
+  algorithm_name: string;
+  algorithm_id: string;
+  metric: string;
+}
+export interface MacroMetric extends Metric {
+  macro_score: number;
+  num_window: number;
+}
+
+export interface MicroMetric extends Metric {
+  micro_score: number;
+  num_user: number;
+}
+
+export interface Metrics {
+  micro_metrics: MicroMetric[];
+  macro_metrics: MacroMetric[];
+}

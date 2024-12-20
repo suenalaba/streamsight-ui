@@ -1,29 +1,47 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
+import {
+  ClientSideRowModelModule,
+  ColDef,
+  ModuleRegistry,
+  NumberFilterModule,
+  TextFilterModule,
+  themeQuartz,
+} from 'ag-grid-community';
+import { AgGridReact } from 'ag-grid-react';
 import { Container, Flex, Table, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { getAlgorithmStates, getStreamSettings } from '@/api';
-import { AlgorithmUuidToState, StreamSettings } from '@/types';
-import classes from './page.module.css';
-import { RegisterAlgoFormProvider, useRegisterAlgoForm } from '@/components/RegisterAlgoForm/RegisterAlgoFormContext';
+import { getAlgorithmStates, getMetrics, getStreamSettings } from '@/api';
 import RegisterAlgoForm from '@/components/RegisterAlgoForm/RegisterAlgoForm';
+import {
+  RegisterAlgoFormProvider,
+  useRegisterAlgoForm,
+} from '@/components/RegisterAlgoForm/RegisterAlgoFormContext';
+import { AlgorithmUuidToState, MacroMetric, MicroMetric, StreamSettings } from '@/types';
+import classes from './page.module.css';
 
-const microResults = [
-  { algoId: 'algo1', metric: 'PrecisionK', value: 0.5, num_user: 3 },
-  { algoId: 'algo1', metric: 'RecallK', value: 0.5, num_user: 3 },
-  { algoId: 'algo2', metric: 'PrecisionK', value: 0.5, num_user: 3 },
-  { algoId: 'algo2', metric: 'RecallK', value: 0.5, num_user: 3 },
-];
+import 'ag-grid-community/styles/ag-theme-alpine.css';
 
-const macroResults = [
-  { algoId: 'algo1', metric: 'PrecisionK', value: 0.5, num_window: 3 },
-  { algoId: 'algo1', metric: 'RecallK', value: 0.5, num_window: 3 },
-  { algoId: 'algo2', metric: 'PrecisionK', value: 0.5, num_window: 3 },
-  { algoId: 'algo2', metric: 'RecallK', value: 0.5, num_window: 3 },
-];
-
+ModuleRegistry.registerModules([
+  ClientSideRowModelModule,
+  ClientSideRowModelModule,
+  NumberFilterModule,
+  TextFilterModule,
+]);
+export interface IOlympicData {
+  athlete: string;
+  age: number;
+  country: string;
+  year: number;
+  date: string;
+  sport: string;
+  gold: number;
+  silver: number;
+  bronze: number;
+  total: number;
+}
 const page = () => {
   const params = useParams<{ streamid: string }>();
   const streamId = params.streamid;
@@ -58,7 +76,7 @@ const page = () => {
           classNames: classes,
         });
       }
-    }
+    };
 
     if (streamId) {
       fetchStreamSettings();
@@ -85,23 +103,86 @@ const page = () => {
     </Table.Tr>
   ));
 
-  const microRows = microResults.map((element) => (
-    <Table.Tr key={`${element.algoId} _micro_metrics_${element.metric}`}>
-      <Table.Td>{element.algoId}</Table.Td>
-      <Table.Td>{element.metric}</Table.Td>
-      <Table.Td>{element.value}</Table.Td>
-      <Table.Td>{element.num_user}</Table.Td>
-    </Table.Tr>
-  ));
+  // Macro and Micro Metrics Table
+  const containerStyle = useMemo(() => ({ width: '100%', height: 300 }), []);
+  const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), []);
+  const [macroTableRowData, setMacroTableRowData] = useState<MacroMetric[]>([]);
+  const [microTableRowData, setMicroTableRowData] = useState<MicroMetric[]>([]);
 
-  const macroRows = macroResults.map((element) => (
-    <Table.Tr key={`${element.algoId} _macro_metrics_${element.metric}`}>
-      <Table.Td>{element.algoId}</Table.Td>
-      <Table.Td>{element.metric}</Table.Td>
-      <Table.Td>{element.value}</Table.Td>
-      <Table.Td>{element.num_window}</Table.Td>
-    </Table.Tr>
-  ));
+  const defaultColDef = useMemo<ColDef>(() => {
+    return {
+      flex: 10,
+      filter: "agTextColumnFilter",
+    };
+  }, []);
+  const [macroTableColumnDefs] = useState<ColDef[]>([
+    {
+      field: 'algorithm_name',
+      headerName: 'Algorithm Name',
+    },
+    {
+      field: 'algorithm_id',
+      headerName: 'Algorithm ID',
+    },
+    {
+      field: 'metric',
+      headerName: 'Metric',
+    },
+    {
+      field: 'macro_score',
+      headerName: 'Macro Score',
+      filter: 'agNumberColumnFilter',
+    },
+    {
+      field: 'num_window',
+      headerName: 'Number of Windows',
+      filter: 'agNumberColumnFilter',
+    },
+  ] as ColDef[]);
+
+  const [microTableColumnDefs] = useState<ColDef[]>([
+    {
+      field: 'algorithm_name',
+      headerName: 'Algorithm Name',
+    },
+    {
+      field: 'algorithm_id',
+      headerName: 'Algorithm ID',
+    },
+    {
+      field: 'metric',
+      headerName: 'Metric',
+    },
+    {
+      field: 'micro_score',
+      headerName: 'Micro Score',
+      filter: 'agNumberColumnFilter',
+    },
+    {
+      field: 'num_user',
+      headerName: 'Number of Users',
+      filter: 'agNumberColumnFilter',
+    },
+  ] as ColDef[]);
+
+  const myTheme = themeQuartz.withParams({
+    backgroundColor: 'white',
+    foregroundColor: 'black',
+    headerTextColor: 'black',
+    headerBackgroundColor: '#00FFCA',
+    oddRowBackgroundColor: 'rgb(0, 0, 0, 0.03)',
+    headerColumnResizeHandleColor: '#05BFDB',
+  });
+
+  const onGridReady = useCallback(() => {
+    getMetrics(streamId).then((metrics) => {
+      if (!metrics) {
+        return;
+      }
+      setMacroTableRowData(metrics.macro_metrics);
+      setMicroTableRowData(metrics.micro_metrics);
+    });
+  }, []);
 
   return (
     <>
@@ -125,7 +206,7 @@ const page = () => {
           <Table.Tbody>{rows}</Table.Tbody>
         </Table>
         <RegisterAlgoFormProvider form={form}>
-          <RegisterAlgoForm/>
+          <RegisterAlgoForm />
         </RegisterAlgoFormProvider>
       </Container>
 
@@ -150,32 +231,33 @@ const page = () => {
 
       <Container size="lg" style={{ marginLeft: 0, paddingLeft: 0, marginTop: 20 }}>
         <Title order={3}>Macro Metrics</Title>
-        <Table highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Algorithm ID</Table.Th>
-              <Table.Th>Metric</Table.Th>
-              <Table.Th>Value</Table.Th>
-              <Table.Th>Number of Windows</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{macroRows}</Table.Tbody>
-        </Table>
+        <div style={containerStyle}>
+          <div style={gridStyle}>
+            <AgGridReact
+              theme={myTheme}
+              rowData={macroTableRowData}
+              defaultColDef={defaultColDef}
+              columnDefs={macroTableColumnDefs}
+              onGridReady={onGridReady}
+            />
+          </div>
+        </div>
       </Container>
 
       <Container size="lg" style={{ marginLeft: 0, paddingLeft: 0, marginTop: 20 }}>
         <Title order={3}>Micro Metrics</Title>
-        <Table highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Algorithm ID</Table.Th>
-              <Table.Th>Metric</Table.Th>
-              <Table.Th>Value</Table.Th>
-              <Table.Th>Number of Users</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{microRows}</Table.Tbody>
-        </Table>
+        <div style={containerStyle}>
+          <div style={gridStyle}>
+            <AgGridReact
+              theme={myTheme}
+              rowData={microTableRowData}
+              defaultColDef={defaultColDef}
+              columnDefs={microTableColumnDefs}
+              onGridReady={onGridReady}
+              className="ag-theme-alpine"
+            />
+          </div>
+        </div>
       </Container>
     </>
   );
