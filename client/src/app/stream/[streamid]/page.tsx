@@ -11,18 +11,26 @@ import {
   themeQuartz,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
-import { Container, Flex, Table, Text, Title } from '@mantine/core';
+import { Badge, Container, Flex, Group, Table, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { getAlgorithmStates, getMetrics, getStreamSettings } from '@/api';
+import { getAlgorithmStates, getMetrics, getStreamSettings, getStreamStatus } from '@/api';
 import RegisterAlgoForm from '@/components/RegisterAlgoForm/RegisterAlgoForm';
 import {
   RegisterAlgoFormProvider,
   useRegisterAlgoForm,
 } from '@/components/RegisterAlgoForm/RegisterAlgoFormContext';
-import { AlgorithmUuidToState, MacroMetric, MicroMetric, StreamSettings } from '@/types';
+import {
+  AlgorithmUuidToState,
+  MacroMetric,
+  MicroMetric,
+  StreamSettings,
+} from '@/types';
 import classes from './page.module.css';
 
 import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+import { StreamStatusEnum } from '@/enum';
+import { getStatusBadgeProps } from '@/constants';
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
@@ -30,24 +38,14 @@ ModuleRegistry.registerModules([
   NumberFilterModule,
   TextFilterModule,
 ]);
-export interface IOlympicData {
-  athlete: string;
-  age: number;
-  country: string;
-  year: number;
-  date: string;
-  sport: string;
-  gold: number;
-  silver: number;
-  bronze: number;
-  total: number;
-}
+
 const page = () => {
   const params = useParams<{ streamid: string }>();
   const streamId = params.streamid;
 
   const [streamSettings, setStreamSettings] = useState<StreamSettings | null>(null);
   const [algorithmStates, setAlgorithmStates] = useState<AlgorithmUuidToState[]>([]);
+  const [streamStatus, setStreamStatus] = useState<string>('');
 
   useEffect(() => {
     const fetchStreamSettings = async () => {
@@ -78,11 +76,28 @@ const page = () => {
       }
     };
 
+    const fetchStreamStatus = async () => {
+      try {
+        setStreamStatus((await getStreamStatus(streamId)).status);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        notifications.show({
+          color: 'red',
+          title: 'Failed to get stream status',
+          message: errorMessage,
+          classNames: classes,
+        });
+      }
+    };
+
     if (streamId) {
       fetchStreamSettings();
       fetchAlgorithmStates();
+      fetchStreamStatus();
     }
   }, [streamId]);
+
+  const statusBadgeProps = getStatusBadgeProps(streamStatus as StreamStatusEnum);
 
   const form = useRegisterAlgoForm({
     mode: 'uncontrolled',
@@ -112,7 +127,7 @@ const page = () => {
   const defaultColDef = useMemo<ColDef>(() => {
     return {
       flex: 10,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
     };
   }, []);
   const [macroTableColumnDefs] = useState<ColDef[]>([
@@ -181,17 +196,30 @@ const page = () => {
       }
       setMacroTableRowData(metrics.macro_metrics);
       setMicroTableRowData(metrics.micro_metrics);
+    }).catch((error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      notifications.show({
+        color: 'red',
+        title: 'Failed to get metrics',
+        message: errorMessage,
+        classNames: classes,
+      });
     });
   }, []);
 
   return (
     <>
-      <Title order={3}>
-        Stream ID:{' '}
-        <Text span variant="gradient" gradient={{ from: '#1c7ed6', to: '#22b8cf' }} inherit>
-          {streamId}
-        </Text>{' '}
-      </Title>
+      <Container size="lg" style={{ marginLeft: 0, paddingLeft: 0 }}>
+      <Group justify="space-between">
+          <Title order={3}>
+            Stream ID:{' '}
+            <Text span variant="gradient" gradient={{ from: '#1c7ed6', to: '#22b8cf' }} inherit>
+              {streamId}
+            </Text>{' '}
+          </Title>
+          <Badge color={statusBadgeProps?.color} size="xl">{statusBadgeProps?.label}</Badge>
+      </Group>
+      </Container>
 
       <Container size="lg" style={{ marginLeft: 0, paddingLeft: 0, marginTop: 20 }}>
         <Title order={3}>Algorithm Statuses</Title>
@@ -206,7 +234,7 @@ const page = () => {
           <Table.Tbody>{rows}</Table.Tbody>
         </Table>
         <RegisterAlgoFormProvider form={form}>
-          <RegisterAlgoForm />
+          <RegisterAlgoForm streamStatus={streamStatus}/>
         </RegisterAlgoFormProvider>
       </Container>
 

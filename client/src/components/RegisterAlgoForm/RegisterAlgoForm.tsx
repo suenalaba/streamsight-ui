@@ -6,8 +6,13 @@ import { notifications } from '@mantine/notifications';
 import { registerAlgorithm } from '@/api';
 import { RegisterAlgoFormValues, useRegisterAlgoFormContext } from './RegisterAlgoFormContext';
 import classes from './RegisterAlgoForm.module.css';
+import { StreamStatusEnum } from '@/enum';
 
-const RegisterAlgoForm = () => {
+interface RegisterAlgoFormProps {
+  streamStatus: string;
+}
+
+const RegisterAlgoForm = ({ streamStatus }: RegisterAlgoFormProps) => {
   const form = useRegisterAlgoFormContext();
   const streamId = useParams<{ streamid: string }>().streamid;
 
@@ -78,7 +83,7 @@ const RegisterAlgoForm = () => {
         />
 
         <Group justify="flex-end" mt="md">
-          <Button type="submit" variant="gradient" gradient={{ from: '#1c7ed6', to: '#22b8cf' }}>
+          <Button type="submit" variant="gradient" gradient={{ from: '#1c7ed6', to: '#22b8cf' }} disabled={streamStatus!==StreamStatusEnum.NOT_STARTED}>
             Register Algorithm
           </Button>
         </Group>
