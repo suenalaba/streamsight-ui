@@ -23,10 +23,19 @@ export const createStream = async (data: CreateStreamRequest): Promise<CreateStr
     return json;
 };
 
-export const startStream = async (streamId: string): Promise<StartStreamResponse> => {
-  const response = await fetch(`${BASE_URL}/streams/${streamId}/start`, {
-    method: 'POST',
-  });
+export const getStreamStatus = async (streamId: string): Promise<StreamStatus> => {
+  const response = await fetch(`${BASE_URL}/streams/${streamId}/status`);
+
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
+  }
+
+  const json = await response.json();
+  return json;
+}
+
+export const getUserStreamStatuses = async (): Promise<StreamStatus[]> => {
+  const response = await fetch(`${BASE_URL}/streams/user`);
 
   if (!response.ok) {
     throw new Error(`Response status: ${response.status}`);
@@ -39,6 +48,19 @@ export const startStream = async (streamId: string): Promise<StartStreamResponse
 export const getStreamSettings = async (streamId: string): Promise<StreamSettings> => {
   const response = await fetch(`${BASE_URL}/streams/${streamId}/settings`);
   
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
+  }
+
+  const json = await response.json();
+  return json;
+}
+
+export const startStream = async (streamId: string): Promise<StartStreamResponse> => {
+  const response = await fetch(`${BASE_URL}/streams/${streamId}/start`, {
+    method: 'POST',
+  });
+
   if (!response.ok) {
     throw new Error(`Response status: ${response.status}`);
   }
@@ -66,28 +88,6 @@ export const registerAlgorithm = async (streamId: string, data: RegisterAlgorith
 
 export const getAlgorithmStates = async (streamId: string): Promise<AlgorithmUuidToState[]> => {
   const response = await fetch(`${BASE_URL}/streams/${streamId}/algorithms/state`);
-
-  if (!response.ok) {
-    throw new Error(`Response status: ${response.status}`);
-  }
-
-  const json = await response.json();
-  return json;
-}
-
-export const getStreamStatus = async (streamId: string): Promise<StreamStatus> => {
-  const response = await fetch(`${BASE_URL}/streams/${streamId}/status`);
-
-  if (!response.ok) {
-    throw new Error(`Response status: ${response.status}`);
-  }
-
-  const json = await response.json();
-  return json;
-}
-
-export const getUserStreamStatuses = async (): Promise<StreamStatus[]> => {
-  const response = await fetch(`${BASE_URL}/streams/user`);
 
   if (!response.ok) {
     throw new Error(`Response status: ${response.status}`);
