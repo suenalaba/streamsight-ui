@@ -1,10 +1,8 @@
-from enum import Enum
 from typing import List, cast
 
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 from streamsight.datasets import (
     AmazonBookDataset,
     AmazonComputerDataset,
@@ -20,6 +18,13 @@ from streamsight.registries.registry import MetricEntry
 from streamsight.settings import SlidingWindowSetting
 
 from src.constants import TEST_USER_ID
+from src.models.stream_management_models import (
+    CreateStreamResponse,
+    StartStreamResponse,
+    Stream,
+    StreamSettings,
+    StreamStatus,
+)
 from src.utils.db_utils import (
     DatabaseErrorException,
     GetEvaluatorStreamErrorException,
@@ -46,28 +51,8 @@ dataset_map = {
 }
 
 
-class Metric(str, Enum):
-    PrecisionK = "PrecisionK"
-    RecallK = "RecallK"
-    DCGK = "DCGK"
-
-
-class Stream(BaseModel):
-    dataset_id: str
-    top_k: int
-    metrics: List[Metric]
-    background_t: int
-    window_size: int
-    n_seq_data: int
-
-
-class StreamStatus(BaseModel):
-    stream_id: str
-    status: str
-
-
 @router.post("/streams")
-def create_stream(stream: Stream):
+def create_stream(stream: Stream) -> CreateStreamResponse:
     try:
         dataset = dataset_map[stream.dataset_id]()
     except KeyError:
@@ -116,7 +101,7 @@ def create_stream(stream: Stream):
 
 
 @router.get("/streams/{stream_id}/status")
-def get_stream_status(stream_id: str):
+def get_stream_status(stream_id: str) -> StreamStatus:
     try:
         uuid_obj = get_stream_uuid_object(stream_id)
         evaluator_streamer = get_stream_from_db(uuid_obj)
@@ -132,7 +117,7 @@ def get_stream_status(stream_id: str):
 
 
 @router.get("/streams/user")
-def get_user_stream_statuses():
+def get_user_stream_statuses() -> List[StreamStatus]:
     # TODO: Get user-id from header
     stream_statuses: list[StreamStatus] = []
     try:
@@ -154,7 +139,7 @@ def get_user_stream_statuses():
 
 
 @router.get("/streams/{stream_id}/settings")
-def get_stream_settings(stream_id: str):
+def get_stream_settings(stream_id: str) -> StreamSettings:
     try:
         uuid_obj = get_stream_uuid_object(stream_id)
         evaluator_streamer, dataset_id = get_stream_from_db_with_dataset_id(uuid_obj)
@@ -194,7 +179,7 @@ def get_stream_settings(stream_id: str):
 
 
 @router.post("/streams/{stream_id}/start")
-def start_stream(stream_id: str):
+def start_stream(stream_id: str) -> StartStreamResponse:
     try:
         uuid_obj = get_stream_uuid_object(stream_id)
         evaluator_streamer = get_stream_from_db(uuid_obj)

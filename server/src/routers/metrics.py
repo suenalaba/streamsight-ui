@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 
+from src.models.metrics_models import MacroMetric, Metrics, MicroMetric
 from src.utils.db_utils import (
     DatabaseErrorException,
     GetEvaluatorStreamErrorException,
@@ -13,27 +13,6 @@ from src.utils.uuid_utils import InvalidUUIDException, get_stream_uuid_object
 router = APIRouter(
     tags=["Metrics"],
 )
-
-
-class MicroMetric(BaseModel):
-    algorithm_name: str
-    algorithm_id: str
-    metric: str
-    micro_score: float
-    num_user: int
-
-
-class MacroMetric(BaseModel):
-    algorithm_name: str
-    algorithm_id: str
-    metric: str
-    macro_score: float
-    num_window: int
-
-
-class Metrics(BaseModel):
-    micro_metrics: list[MicroMetric]
-    macro_metrics: list[MacroMetric]
 
 
 @router.get("/streams/{stream_id}/metrics")

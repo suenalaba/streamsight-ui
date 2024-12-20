@@ -1,6 +1,11 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 
+from src.models.algorithm_management_models import (
+    AlgorithmRegistrationRequest,
+    GetAlgorithmStateResponse,
+    GetAllAlgorithmStateResponse,
+    RegisterAlgorithmResponse,
+)
 from src.utils.db_utils import (
     DatabaseErrorException,
     GetEvaluatorStreamErrorException,
@@ -17,12 +22,10 @@ from src.utils.uuid_utils import (
 router = APIRouter(tags=["Algorithm Management"])
 
 
-class AlgorithmRegistrationRequest(BaseModel):
-    algorithm_name: str
-
-
 @router.post("/streams/{stream_id}/algorithms")
-def register_algorithm(stream_id: str, request: AlgorithmRegistrationRequest):
+def register_algorithm(
+    stream_id: str, request: AlgorithmRegistrationRequest
+) -> RegisterAlgorithmResponse:
     try:
         uuid_obj = get_stream_uuid_object(stream_id)
         evaluator_streamer = get_stream_from_db(uuid_obj)
@@ -45,7 +48,7 @@ def register_algorithm(stream_id: str, request: AlgorithmRegistrationRequest):
 
 
 @router.get("/streams/{stream_id}/algorithms/{algorithm_id}/state")
-def get_algorithm_state(stream_id: str, algorithm_id: str):
+def get_algorithm_state(stream_id: str, algorithm_id: str) -> GetAlgorithmStateResponse:
     try:
         evaluator_streamer_uuid = get_stream_uuid_object(stream_id)
         algorithm_uuid = get_algo_uuid_object(algorithm_id)
@@ -62,7 +65,7 @@ def get_algorithm_state(stream_id: str, algorithm_id: str):
 
 
 @router.get("/streams/{stream_id}/algorithms/state")
-def get_all_algorithm_state(stream_id: str):
+def get_all_algorithm_state(stream_id: str) -> GetAllAlgorithmStateResponse:
     try:
         evaluator_streamer_uuid = get_stream_uuid_object(stream_id)
         evaluator_streamer = get_stream_from_db(evaluator_streamer_uuid)
@@ -85,7 +88,7 @@ def get_all_algorithm_state(stream_id: str):
 
 
 @router.get("/streams/{stream_id}/algorithms/{algorithm_id}/is-completed")
-def is_algorithm_streaming_completed(stream_id: str, algorithm_id: str):
+def is_algorithm_streaming_completed(stream_id: str, algorithm_id: str) -> bool:
     try:
         evaluator_streamer_uuid = get_stream_uuid_object(stream_id)
         algorithm_uuid = get_algo_uuid_object(algorithm_id)
