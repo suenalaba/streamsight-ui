@@ -140,11 +140,11 @@ def get_user_stream_statuses():
         for stream_uuid_obj in stream_uuid_objs:
             evaluator_streamer = get_stream_from_db(stream_uuid_obj)
             status = "COMPLETED"
-            if not evaluator_streamer.has_started:
-                status = "NOT_STARTED"
             for value in evaluator_streamer.get_all_algorithm_status().values():
                 if value.name != "COMPLETED":
                     status = "IN_PROGRESS"
+            if not evaluator_streamer.has_started:
+                status = "NOT_STARTED"
             stream_statuses.append(
                 StreamStatus(stream_id=str(stream_uuid_obj), status=status)
             )
