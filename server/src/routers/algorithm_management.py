@@ -84,7 +84,7 @@ def get_all_algorithm_state(stream_id: str) -> GetAllAlgorithmStateResponse:
             status_code=500, detail=f"Error getting all algorithm states: {str(e)}"
         )
 
-    return algorithm_states
+    return {"algorithm_states": algorithm_states}
 
 
 @router.get("/streams/{stream_id}/algorithms/{algorithm_id}/is-completed")

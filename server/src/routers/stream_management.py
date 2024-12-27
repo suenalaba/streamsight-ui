@@ -97,7 +97,7 @@ def create_stream(stream: Stream) -> CreateStreamResponse:
             status_code=500, detail=f"Error creating evaluator streamer: {str(e)}"
         )
 
-    return {"evaluator_stream_id": stream_id}
+    return {"evaluator_stream_id": str(stream_id)}
 
 
 @router.get("/streams/{stream_id}/status")
