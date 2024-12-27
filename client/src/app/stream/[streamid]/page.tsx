@@ -64,7 +64,7 @@ const page = () => {
 
     const fetchAlgorithmStates = async () => {
       try {
-        setAlgorithmStates(await getAlgorithmStates(streamId));
+        setAlgorithmStates((await getAlgorithmStates(streamId)).algorithm_states);
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         notifications.show({
