@@ -34,6 +34,10 @@ export interface RegisterAlgorithmResponse {
   algorithm_uuid: string;
 }
 
+export interface GetAllAlgorithmStateResponse {
+  algorithm_states: AlgorithmUuidToState[];
+}
+
 export interface AlgorithmUuidToState {
   algorithm_uuid: string;
   algorithm_name: string;
