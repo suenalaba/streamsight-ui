@@ -9,8 +9,8 @@ import requests
 from sqlalchemy import JSON, Column, Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
 
-from migrations.utils.preprocess_df import map_user_and_item_ids
 from migrations.constants import CONNECTION_STRING
+from migrations.utils.preprocess_df import map_user_and_item_ids
 
 DATASET_URL = "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Movies_and_TV.json.gz"
 ZIP_PATH = "migrations/datasets/meta_Movies_and_TV.json.gz"

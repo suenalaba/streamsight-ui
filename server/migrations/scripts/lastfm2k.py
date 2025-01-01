@@ -8,8 +8,8 @@ import requests
 from sqlalchemy import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
 
-from migrations.utils.preprocess_df import map_user_and_item_ids
 from migrations.constants import CONNECTION_STRING
+from migrations.utils.preprocess_df import map_user_and_item_ids
 
 DATASET_URL = "https://files.grouplens.org/datasets/hetrec2011/hetrec2011-lastfm-2k.zip"
 ZIP_PATH = "migrations/datasets/hetrec2011-lastfm-2k.zip"

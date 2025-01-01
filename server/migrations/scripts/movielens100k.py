@@ -9,8 +9,8 @@ import requests
 from sqlalchemy import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
 
-from migrations.utils.preprocess_df import map_user_and_item_ids
 from migrations.constants import CONNECTION_STRING
+from migrations.utils.preprocess_df import map_user_and_item_ids
 
 DATASET_URL = "http://files.grouplens.org/datasets/movielens/ml-100k.zip"
 ZIP_PATH = "migrations/datasets/ml-100k.zip"
