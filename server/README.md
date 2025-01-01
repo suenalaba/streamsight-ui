@@ -21,6 +21,7 @@ uv sync --all-extras
 ```
 cp .env.example .env
 ```
+5. Run `source .venv/bin/activate
 
 ### Development
 1. Run
