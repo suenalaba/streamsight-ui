@@ -20,6 +20,13 @@ def get_metrics(stream_id: str) -> Metrics:
     try:
         evaluator_streamer_uuid = get_stream_uuid_object(stream_id)
         evaluator_streamer = get_stream_from_db(evaluator_streamer_uuid)
+        
+        if not evaluator_streamer.has_predicted:
+            return {
+                "micro_metrics": [],
+                "macro_metrics": [],
+            }
+
         micro_metrics = evaluator_streamer.metric_results("micro")
         macro_metrics = evaluator_streamer.metric_results("macro")
 
