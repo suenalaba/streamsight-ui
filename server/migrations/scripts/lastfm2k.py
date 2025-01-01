@@ -9,6 +9,7 @@ from sqlalchemy import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
 
 from migrations.utils.preprocess_df import map_user_and_item_ids
+from migrations.constants import CONNECTION_STRING
 
 DATASET_URL = "https://files.grouplens.org/datasets/hetrec2011/hetrec2011-lastfm-2k.zip"
 ZIP_PATH = "migrations/datasets/hetrec2011-lastfm-2k.zip"
@@ -21,7 +22,6 @@ FILENAMES = [
 DATASET_DIR = "migrations/datasets"
 EXTRACTED_DATASETS_PATH = "migrations/datasets"
 _ENGINE: Engine = None
-CONNECTION_STRING = "postgresql://localhost:5432/streamsight_test"
 
 
 class LastFM2kUser(SQLModel, table=True):
@@ -66,6 +66,10 @@ def main():
 def download_dataset():
     response = requests.get(DATASET_URL)
 
+    if not os.path.exists(DATASET_DIR):
+        os.makedirs(DATASET_DIR)
+        print(f"Created directory: {DATASET_DIR}")
+        
     with open(ZIP_PATH, "wb") as file:
         file.write(response.content)
 

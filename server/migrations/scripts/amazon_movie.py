@@ -10,6 +10,7 @@ from sqlalchemy import JSON, Column, Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
 
 from migrations.utils.preprocess_df import map_user_and_item_ids
+from migrations.constants import CONNECTION_STRING
 
 DATASET_URL = "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Movies_and_TV.json.gz"
 ZIP_PATH = "migrations/datasets/meta_Movies_and_TV.json.gz"
@@ -17,7 +18,6 @@ FILENAMES = ["meta_Movies_and_TV.json"]
 DATASET_DIR = "migrations/datasets"
 EXTRACTED_DATASETS_PATH = "migrations/datasets"
 _ENGINE: Engine = None
-CONNECTION_STRING = "postgresql://localhost:5432/streamsight_test"
 
 INTERACTION_DATASET_URL = "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/categoryFilesSmall/Movies_and_TV.csv"
 INTERACTION_ZIP_PATH = "migrations/datasets/Movies_and_TV.csv"
@@ -65,6 +65,10 @@ def main():
 def download_dataset():
     response = requests.get(DATASET_URL)
 
+    if not os.path.exists(DATASET_DIR):
+        os.makedirs(DATASET_DIR)
+        print(f"Created directory: {DATASET_DIR}")
+        
     with open(ZIP_PATH, "wb") as file:
         file.write(response.content)
 
