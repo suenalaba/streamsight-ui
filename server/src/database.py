@@ -23,7 +23,6 @@ class UserToStreamModel(SQLModel, table=True):
 _engine: Engine = None
 # connection_string = f"postgresql://postgres:{password}@db.gbqsbltnpqzpvunwvrpy.supabase.co:5432/${dbname}"
 # connection_string = f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
-#
 connection_string = "postgresql://postgres:postgres@localhost:5433/postgres"
 
 
