@@ -8,6 +8,8 @@ class Metric(str, Enum):
     PrecisionK = "PrecisionK"
     RecallK = "RecallK"
     DCGK = "DCGK"
+    NDCGK= "NDCGK"
+    HITK = "HitK"
 
 
 class Stream(BaseModel):

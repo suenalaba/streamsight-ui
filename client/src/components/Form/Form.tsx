@@ -17,7 +17,7 @@ const DATASETS = [
   'movielens',
   'lastfm',
 ];
-const METRICS = ['PrecisionK', 'RecallK', 'NDCGK', 'DGCK'];
+const METRICS = ['PrecisionK', 'RecallK', 'NDCGK', 'DCGK', 'HitK'];
 
 const Form = () => {
   const [opened, { open, close }] = useDisclosure(false);
