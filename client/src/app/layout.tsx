@@ -1,3 +1,5 @@
+'use client';
+
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
@@ -14,13 +16,10 @@ import {
 } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import Navbar from '@/components/Navbar/Navbar';
+import UserDisplay from '@/components/UserDisplay/UserDisplay';
+import { AuthProvider } from '@/providers/AuthProvider';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
-
-export const metadata = {
-  title: 'My Mantine app',
-  description: 'I have followed setup instructions carefully',
-};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -30,32 +29,43 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <MantineProvider>
-          <Notifications />
-          <AppShell
-            header={{ height: 60 }}
-            navbar={{
-              width: 300,
-              breakpoint: 'sm',
-            }}
-            padding="md"
-          >
-            <AppShellHeader>
-              <Group h="100%" px="md">
-                <Text
-                  size="xl"
-                  fw={900}
-                  variant="gradient"
-                  gradient={{ from: '#1c7ed6', to: '#22b8cf' }}
+          <AuthProvider>
+            <Notifications />
+            <AppShell
+              header={{ height: 60 }}
+              navbar={{
+                width: 300,
+                breakpoint: 'sm',
+              }}
+              padding="md"
+            >
+              <AppShellHeader>
+                <Group
+                  h="100%"
+                  px="md"
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
                 >
-                  Streamsight-UI
-                </Text>
-              </Group>
-            </AppShellHeader>
-            <AppShellNavbar p="md">
-              <Navbar />
-            </AppShellNavbar>
-            <AppShellMain>{children}</AppShellMain>
-          </AppShell>
+                  <Text
+                    size="xl"
+                    fw={900}
+                    variant="gradient"
+                    gradient={{ from: '#1c7ed6', to: '#22b8cf' }}
+                  >
+                    Streamsight-UI
+                  </Text>
+                  <UserDisplay />
+                </Group>
+              </AppShellHeader>
+              <AppShellNavbar p="md">
+                <Navbar />
+              </AppShellNavbar>
+              <AppShellMain>{children}</AppShellMain>
+            </AppShell>
+          </AuthProvider>
         </MantineProvider>
       </body>
     </html>
