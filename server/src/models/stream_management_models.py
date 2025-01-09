@@ -44,6 +44,7 @@ class StreamSettings(BaseModel):
     window_size: int
     n_seq_data: int
     number_of_windows: int
+    current_window: int
 
 
 class StartStreamResponse(BaseModel):
