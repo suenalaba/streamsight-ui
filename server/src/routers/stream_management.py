@@ -152,6 +152,7 @@ def get_stream_settings(stream_id: str) -> StreamSettings:
             top_k = sliding_window_setting.top_K
             metric_names = [entry.name for entry in evaluator_streamer.metric_entries]
             number_of_windows = evaluator_streamer.setting.num_split
+            current_window = evaluator_streamer._run_step
 
             data = {
                 "n_seq_data": n_seq_data,
@@ -161,6 +162,8 @@ def get_stream_settings(stream_id: str) -> StreamSettings:
                 "metrics": metric_names,
                 "dataset_id": dataset_id,
                 "number_of_windows": number_of_windows,
+                "current_window": current_window,
+
             }
 
             json_data = jsonable_encoder(data)
