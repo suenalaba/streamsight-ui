@@ -66,7 +66,15 @@ const page = () => {
   });
 
   const onGridReady = useCallback(() => {
-    getUserStreamStatuses().then((streamStatuses) => setRowData(streamStatuses));
+    getUserStreamStatuses().then((streamStatuses) => setRowData(streamStatuses)).catch((error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      notifications.show({
+        color: 'red',
+        title: 'Please login to view streams',
+        message: errorMessage,
+        classNames: classes,
+      });
+    });
   }, []);
 
   const handleCellButtonClick = async (streamId: string) => {

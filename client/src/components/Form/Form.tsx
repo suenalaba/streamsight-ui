@@ -31,7 +31,7 @@ const Form = () => {
       metrics: [],
       background_t: 1,
       window_size: 1,
-      n_seq_data: 1,
+      n_seq_data: 0,
     },
 
     validate: {

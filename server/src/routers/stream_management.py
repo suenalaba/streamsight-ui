@@ -1,6 +1,6 @@
-from typing import List, cast
+from typing import Annotated, List, cast
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from streamsight.datasets import (
@@ -17,7 +17,7 @@ from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 from streamsight.registries.registry import MetricEntry
 from streamsight.settings import SlidingWindowSetting
 
-from src.constants import TEST_USER_ID
+from src.supabase_client.authentication import is_user_authenticated
 from src.models.stream_management_models import (
     CreateStreamResponse,
     StartStreamResponse,
@@ -31,8 +31,8 @@ from src.utils.db_utils import (
     get_stream_from_db,
     get_stream_from_db_with_dataset_id,
     get_user_stream_ids_from_db,
+    is_user_stream,
     update_stream,
-    update_user_stream_mappings,
     write_stream_to_db,
 )
 from src.utils.uuid_utils import InvalidUUIDException, get_stream_uuid_object
@@ -52,7 +52,7 @@ dataset_map = {
 
 
 @router.post("/streams")
-def create_stream(stream: Stream) -> CreateStreamResponse:
+def create_stream(stream: Stream, user_id: Annotated[str, Depends(is_user_authenticated)]) -> CreateStreamResponse:
     try:
         dataset = dataset_map[stream.dataset_id]()
     except KeyError:
@@ -88,8 +88,7 @@ def create_stream(stream: Stream) -> CreateStreamResponse:
 
     try:
         evaluator_streamer = EvaluatorStreamer(metrics, setting_sliding, stream.top_k)
-        stream_id = write_stream_to_db(evaluator_streamer, stream.dataset_id)
-        update_user_stream_mappings(TEST_USER_ID, stream_id)
+        stream_id = write_stream_to_db(evaluator_streamer, stream.dataset_id, user_id)
     except DatabaseErrorException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
@@ -117,11 +116,10 @@ def get_stream_status(stream_id: str) -> StreamStatus:
 
 
 @router.get("/streams/user")
-def get_user_stream_statuses() -> List[StreamStatus]:
-    # TODO: Get user-id from header
+def get_user_stream_statuses(user_id: Annotated[str, Depends(is_user_authenticated)]) -> List[StreamStatus]:
     stream_statuses: list[StreamStatus] = []
     try:
-        stream_uuid_objs = get_user_stream_ids_from_db(TEST_USER_ID)
+        stream_uuid_objs = get_user_stream_ids_from_db(user_id)
         for stream_uuid_obj in stream_uuid_objs:
             evaluator_streamer = get_stream_from_db(stream_uuid_obj)
             status = "COMPLETED"
@@ -196,3 +194,20 @@ def start_stream(stream_id: str) -> StartStreamResponse:
         raise HTTPException(status_code=409, detail=f"Error Starting Stream: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error Starting Stream: {str(e)}")
+
+
+@router.get("/streams/{stream_id}/check_access")
+def check_stream_access(
+    stream_id: str, user_id: Annotated[str, Depends(is_user_authenticated)]
+) -> bool:
+    try:
+        uuid_obj = get_stream_uuid_object(stream_id)
+        if is_user_stream(uuid_obj, user_id):
+            return True
+        return False
+    except (InvalidUUIDException, GetEvaluatorStreamErrorException) as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error Checking Stream Access: {str(e)}")
+    
+    
