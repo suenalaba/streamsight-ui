@@ -33,6 +33,19 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   return response.json();
 };
 
+export const isUserAllowedToAccessStream = async (streamId: string): Promise<boolean> => {
+  return fetchWithAuth(`${BASE_URL}/streams/${streamId}/check_access`, { method: 'GET'});
+}
+
+export const isUserAuthenticated = async (): Promise<boolean> => {
+  const token = await getAccessToken();
+  return !!token;
+}
+
+export const getHeroes = async () => {
+  return fetchWithAuth(`${BASE_URL}/authentication/get_heroes`);
+}
+
 export const getStatus = async () => {
   return fetch(`${BASE_URL}/`);
 };
