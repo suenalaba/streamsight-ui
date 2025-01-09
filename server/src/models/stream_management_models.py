@@ -43,6 +43,7 @@ class StreamSettings(BaseModel):
     background_t: int
     window_size: int
     n_seq_data: int
+    number_of_windows: int
 
 
 class StartStreamResponse(BaseModel):

@@ -24,6 +24,7 @@ export interface StreamSettings {
   background_t: number;
   window_size: number;
   n_seq_data: number;
+  number_of_windows: number;
 }
 
 export interface RegisterAlgorithmRequest {
