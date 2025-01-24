@@ -87,3 +87,39 @@ uv run ruff format your_path/your_file.py   # Format `your_file.py`.
 
 #### Commit Messages:
 Our commit messages should follow the convention of [Git Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/)
+
+
+#### Folder Structure:
+```
+.
+├── src
+│   ├── __init__.py
+│   ├── constants.py
+│   ├── database.py
+│   ├── events.py
+│   ├── main.py
+│   ├── settings.py
+│   └── routers
+│   │   ├── __init__.py
+│   │   ├── algorithm_management.py
+│   │   ├── authentication.py
+│   │   ├── data_handling.py
+│   │   ├── metrics.py
+│   │   └── predictions.py
+│   │   └── stream_management.py
+│   └── models
+│   │   ├── __init__.py
+│   │   └── algorithm_management_models.py
+│   │   └── metadata.py
+│   │   └── metrics_models.py
+│   │   └── stream_management_models.py
+│   └── supabase_client
+│   │   ├── __init__.py
+│   │   └── authentication.py
+│   │   └── client.py
+│   └── utils
+│       ├── __init__.py
+│       └── db_utils.py
+│       └── string_utils.py
+│       └── uuid_utils.py
+```
