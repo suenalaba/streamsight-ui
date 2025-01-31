@@ -214,5 +214,9 @@ def check_stream_access(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error Checking Stream Access: {str(e)}")
-    
+
+
+@router.get("/streams/datasets")
+def get_datasets() -> List[str]:
+    return list(dataset_map.keys())
     
