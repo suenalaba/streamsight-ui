@@ -93,3 +93,7 @@ export const getMetrics = async (streamId: string): Promise<Metrics> => {
 export const getMetricsList = async (): Promise<string[]> => {
   return fetchWithAuth(`${BASE_URL}/metrics`, { method: 'GET'});
 }
+
+export const getDatasets = async (): Promise<string[]> => {
+  return fetchWithAuth(`${BASE_URL}/streams/datasets`, { method: 'GET'});
+}
