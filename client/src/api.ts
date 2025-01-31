@@ -89,3 +89,7 @@ export const getAlgorithmStates = async (streamId: string): Promise<GetAllAlgori
 export const getMetrics = async (streamId: string): Promise<Metrics> => {
   return fetchWithAuth(`${BASE_URL}/streams/${streamId}/metrics`, { method: 'GET'});
 }
+
+export const getMetricsList = async (): Promise<string[]> => {
+  return fetchWithAuth(`${BASE_URL}/metrics`, { method: 'GET'});
+}
