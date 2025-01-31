@@ -76,3 +76,9 @@ def get_metrics(stream_id: str) -> Metrics:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error Getting Metrics: {str(e)}")
+
+
+@router.get("/metrics")
+def get_metrics_list() -> list[str]:
+    return ['PrecisionK', 'RecallK', 'NDCGK', 'DCGK', 'HitK']
+

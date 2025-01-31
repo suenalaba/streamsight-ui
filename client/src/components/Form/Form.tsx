@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button, Flex, Grid, Group, Modal, MultiSelect, NumberInput, Select } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { createStream } from '@/api';
+import { createStream, getMetricsList } from '@/api';
 import { CreateStreamRequest } from '@/types';
 import { CreateStreamFormProvider, useCreateStreamForm } from './FormContext';
 import classes from './Form.module.css';
@@ -17,11 +17,11 @@ const DATASETS = [
   'movielens',
   'lastfm',
 ];
-const METRICS = ['PrecisionK', 'RecallK', 'NDCGK', 'DCGK', 'HitK'];
 
 const Form = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [createdStreamId, setCreatedStreamId] = React.useState<string | null>(null);
+  const [metrics, setMetrics] = React.useState<string[]>([]);
 
   const form = useCreateStreamForm({
     mode: 'uncontrolled',
@@ -60,6 +60,24 @@ const Form = () => {
       });
     }
   };
+
+  useEffect(() => {
+    const fetchMetricsList = async () => {
+      try {
+        const metricsList = await getMetricsList();
+        setMetrics(metricsList);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        notifications.show({
+          color: 'red',
+          title: 'Failed to fetch list of available metrics',
+          message: errorMessage,
+          classNames: classes,
+        });
+      }
+    };
+    fetchMetricsList();
+  }, []);
 
   return (
     <>
@@ -120,7 +138,7 @@ const Form = () => {
             withAsterisk
             label="Metrics"
             placeholder="Select metrics"
-            data={METRICS}
+            data={metrics}
             clearable
             searchable
             nothingFoundMessage="No metrics found..."
