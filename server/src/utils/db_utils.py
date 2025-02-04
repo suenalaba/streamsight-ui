@@ -2,7 +2,7 @@ import pickle
 import uuid
 from typing import Tuple
 
-from sqlmodel import Session, SQLModel, select
+from sqlmodel import Session, select
 from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 
 from src.database import EvaluatorStreamModel, get_sql_connection
@@ -132,17 +132,6 @@ def write_stream_to_db(
         raise DatabaseErrorException(
             "Error write evaluator stream to database: " + str(e)
         )
-
-
-def get_metadata_from_db(metadata_model: SQLModel) -> list[SQLModel]:
-    try:
-        with Session(get_sql_connection()) as session:
-            statement = select(metadata_model)
-            query_results = session.exec(statement)
-            metadata = query_results.all()
-            return metadata
-    except Exception as e:
-        raise DatabaseErrorException("Error getting metadata from database: " + str(e))
 
 
 def get_user_stream_ids_from_db(user_id: str) -> list[uuid.UUID]:
