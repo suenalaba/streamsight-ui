@@ -413,8 +413,8 @@ class TestGetAllAlgorithmState(unittest.TestCase):
         mock_algorithm_completed = MagicMock()
         mock_algorithm_completed.name = "COMPLETED"
         mock.get_all_algorithm_status.return_value = {
-            UUID("12345678-1234-5678-1234-567812345678"): mock_algorithm_new,
-            UUID("87654321-4321-8765-4321-876543218765"): mock_algorithm_completed,
+            "algo1_12345678-1234-5678-1234-567812345678": mock_algorithm_new,
+            "algo2_87654321-4321-8765-4321-876543218765": mock_algorithm_completed,
         }
         return mock
 
@@ -445,10 +445,18 @@ class TestGetAllAlgorithmState(unittest.TestCase):
 
             assert response.status_code == 200
             assert response.json() == {
-                "algorithm_states": {
-                    "12345678-1234-5678-1234-567812345678": "NEW",
-                    "87654321-4321-8765-4321-876543218765": "COMPLETED",
-                }
+                "algorithm_states": [
+                    {
+                        "algorithm_uuid": "12345678-1234-5678-1234-567812345678",
+                        "algorithm_name": "algo1",
+                        "state": "NEW",
+                    },
+                    {
+                        "algorithm_uuid": "87654321-4321-8765-4321-876543218765",
+                        "algorithm_name": "algo2",
+                        "state": "COMPLETED",
+                    },
+                ]
             }
 
     def test_get_all_algorithm_state_invalid_stream_id(self):

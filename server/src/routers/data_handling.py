@@ -1,19 +1,8 @@
-from typing import List, Union
-
 from fastapi import APIRouter, HTTPException, Query
 
-from src.models.metadata import (
-    AmazonMovieItem,
-    LastFM2kItem,
-    LastFM2kTag,
-    LastFM2kUser,
-    MovieLens100kItem,
-    MovieLens100kUser,
-)
 from src.utils.db_utils import (
     DatabaseErrorException,
     GetEvaluatorStreamErrorException,
-    get_metadata_from_db,
     get_stream_from_db,
     update_stream,
 )
@@ -96,36 +85,3 @@ def get_unlabeled_data(
         )
 
     return {"shape": shape, "unlabeled_data": df_json}
-
-
-metadata_mappings = {
-    "amazon_movie_item": AmazonMovieItem,
-    "movielens100k_user": MovieLens100kUser,
-    "movielens100k_item": MovieLens100kItem,
-    "lastfm2k_user": LastFM2kUser,
-    "lastfm2k_item": LastFM2kItem,
-    "lastfm2k_tag": LastFM2kTag,
-}
-
-
-@router.get(
-    "/metadata/{metadata_id}",
-    response_model=List[Union[tuple(metadata_mappings.values())]],
-)
-def get_metadata(metadata_id: str):
-    if metadata_id not in metadata_mappings:
-        raise HTTPException(
-            status_code=404, detail=f"Metadata with ID {metadata_id} not found"
-        )
-    try:
-        metadatas = get_metadata_from_db(metadata_mappings[metadata_id])
-        return metadatas
-    except DatabaseErrorException as e:
-        raise HTTPException(
-            status_code=e.status_code, detail=f"Metadata ID: {metadata_id}, {e.message}"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error getting metadata with ID {metadata_id}: {str(e)}",
-        )

@@ -5,9 +5,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from streamsight.datasets import (
     AmazonBookDataset,
-    AmazonComputerDataset,
     AmazonMovieDataset,
     AmazonMusicDataset,
+    AmazonSubscriptionBoxesDataset,
     LastFMDataset,
     MovieLens100K,
     TestDataset,
@@ -42,7 +42,7 @@ router = APIRouter(tags=["Stream Management"])
 dataset_map = {
     "amazon_music": AmazonMusicDataset,
     "amazon_book": AmazonBookDataset,
-    "amazon_computer": AmazonComputerDataset,
+    "amazon_subscription_boxes": AmazonSubscriptionBoxesDataset,
     "amazon_movie": AmazonMovieDataset,
     "yelp": YelpDataset,
     "test": TestDataset,
@@ -136,8 +136,12 @@ def get_user_stream_statuses(
                 StreamStatus(stream_id=str(stream_uuid_obj), status=status)
             )
         return stream_statuses
-    except (InvalidUUIDException, GetEvaluatorStreamErrorException) as e:
+    except (DatabaseErrorException, GetEvaluatorStreamErrorException) as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error getting user stream statuses: {str(e)}"
+        )
 
 
 @router.get("/streams/{stream_id}/settings")
@@ -155,7 +159,7 @@ def get_stream_settings(stream_id: str) -> StreamSettings:
             background_t = sliding_window_setting.t
             top_k = sliding_window_setting.top_K
             metric_names = [entry.name for entry in evaluator_streamer.metric_entries]
-            number_of_windows = evaluator_streamer.setting.num_split
+            number_of_windows = sliding_window_setting.num_split
             current_window = evaluator_streamer._run_step
 
             data = {

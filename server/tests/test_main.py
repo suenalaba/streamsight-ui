@@ -11,4 +11,4 @@ class TestMain(unittest.TestCase):
     def test_healthcheck(self):
         response = client.get("/")
         assert response.status_code == 200
-        assert response.json() == {"Server is running, STATUS": "HEALTHY"}
+        assert response.json() == {"Status": "HEALTHY"}
