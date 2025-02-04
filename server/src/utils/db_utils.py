@@ -73,9 +73,11 @@ def get_stream_from_db_with_dataset_id(
 def is_user_stream(stream_id: uuid.UUID, user_id: str) -> bool:
     try:
         with Session(get_sql_connection()) as session:
-            statement = select(EvaluatorStreamModel).where(
-                EvaluatorStreamModel.stream_id == stream_id
-            ).where(EvaluatorStreamModel.user_id == user_id)
+            statement = (
+                select(EvaluatorStreamModel)
+                .where(EvaluatorStreamModel.stream_id == stream_id)
+                .where(EvaluatorStreamModel.user_id == user_id)
+            )
             results = session.exec(statement)
             stream = results.first()
             if not stream:
@@ -110,14 +112,16 @@ def update_stream(stream_id: uuid.UUID, evaluator_streamer: EvaluatorStreamer):
         )
 
 
-def write_stream_to_db(evaluator_streamer: EvaluatorStreamer, dataset_id: str, user_id: str):
+def write_stream_to_db(
+    evaluator_streamer: EvaluatorStreamer, dataset_id: str, user_id: str
+):
     try:
         evaluator_streamer.prepare_dump()
         evaluator_stream_obj = pickle.dumps(evaluator_streamer)
 
         with Session(get_sql_connection()) as session:
             new_stream = EvaluatorStreamModel(
-                stream_object=evaluator_stream_obj, 
+                stream_object=evaluator_stream_obj,
                 dataset_id=dataset_id,
                 user_id=uuid.UUID(user_id),
             )
@@ -154,4 +158,3 @@ def get_user_stream_ids_from_db(user_id: str) -> list[uuid.UUID]:
         raise DatabaseErrorException(
             "Error getting user stream IDs from database: " + str(e)
         )
-
