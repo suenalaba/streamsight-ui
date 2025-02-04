@@ -50,7 +50,7 @@ def sign_out(supabase_client: Annotated[SyncClient, Depends(get_supabase_client)
 @router.get("/authentication/get_heroes")
 def get_heroes(user_id: Annotated[str, Depends(is_user_authenticated)]):
     try:
-        print('User_id: ', user_id)
+        print("User_id: ", user_id)
         response = read_db()
         heroes = response.data
     except Exception as e:

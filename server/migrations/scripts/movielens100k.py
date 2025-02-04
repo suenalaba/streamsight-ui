@@ -80,7 +80,7 @@ def download_dataset():
     if not os.path.exists(DATASET_DIR):
         os.makedirs(DATASET_DIR)
         print(f"Created directory: {DATASET_DIR}")
-    
+
     with open(ZIP_PATH, "wb") as file:
         file.write(response.content)
 

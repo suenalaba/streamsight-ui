@@ -17,7 +17,6 @@ from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
 from streamsight.registries.registry import MetricEntry
 from streamsight.settings import SlidingWindowSetting
 
-from src.supabase_client.authentication import is_user_authenticated
 from src.models.stream_management_models import (
     CreateStreamResponse,
     StartStreamResponse,
@@ -25,6 +24,7 @@ from src.models.stream_management_models import (
     StreamSettings,
     StreamStatus,
 )
+from src.supabase_client.authentication import is_user_authenticated
 from src.utils.db_utils import (
     DatabaseErrorException,
     GetEvaluatorStreamErrorException,
@@ -52,7 +52,9 @@ dataset_map = {
 
 
 @router.post("/streams")
-def create_stream(stream: Stream, user_id: Annotated[str, Depends(is_user_authenticated)]) -> CreateStreamResponse:
+def create_stream(
+    stream: Stream, user_id: Annotated[str, Depends(is_user_authenticated)]
+) -> CreateStreamResponse:
     try:
         dataset = dataset_map[stream.dataset_id]()
     except KeyError:
@@ -116,7 +118,9 @@ def get_stream_status(stream_id: str) -> StreamStatus:
 
 
 @router.get("/streams/user")
-def get_user_stream_statuses(user_id: Annotated[str, Depends(is_user_authenticated)]) -> List[StreamStatus]:
+def get_user_stream_statuses(
+    user_id: Annotated[str, Depends(is_user_authenticated)],
+) -> List[StreamStatus]:
     stream_statuses: list[StreamStatus] = []
     try:
         stream_uuid_objs = get_user_stream_ids_from_db(user_id)
@@ -163,7 +167,6 @@ def get_stream_settings(stream_id: str) -> StreamSettings:
                 "dataset_id": dataset_id,
                 "number_of_windows": number_of_windows,
                 "current_window": current_window,
-
             }
 
             json_data = jsonable_encoder(data)
@@ -213,10 +216,11 @@ def check_stream_access(
     except (InvalidUUIDException, GetEvaluatorStreamErrorException) as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error Checking Stream Access: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error Checking Stream Access: {str(e)}"
+        )
 
 
 @router.get("/streams/datasets")
 def get_datasets() -> List[str]:
     return list(dataset_map.keys())
-    

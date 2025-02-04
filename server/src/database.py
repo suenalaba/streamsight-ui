@@ -19,10 +19,11 @@ class EvaluatorStreamModel(SQLModel, table=True):
 # SQL Connection
 _engine: Engine = None
 connection_string = (
-    f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}" 
-    if USE_SUPABASE 
+    f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}"
+    if USE_SUPABASE
     else "postgresql://postgres:postgres@localhost:5433/postgres"
 )
+
 
 def get_sql_connection() -> Engine:
     global _engine

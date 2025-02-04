@@ -8,7 +8,7 @@ class Metric(str, Enum):
     PrecisionK = "PrecisionK"
     RecallK = "RecallK"
     DCGK = "DCGK"
-    NDCGK= "NDCGK"
+    NDCGK = "NDCGK"
     HITK = "HitK"
 
 

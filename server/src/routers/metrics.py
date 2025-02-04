@@ -20,7 +20,7 @@ def get_metrics(stream_id: str) -> Metrics:
     try:
         evaluator_streamer_uuid = get_stream_uuid_object(stream_id)
         evaluator_streamer = get_stream_from_db(evaluator_streamer_uuid)
-        
+
         if not evaluator_streamer.has_predicted:
             return {
                 "micro_metrics": [],
@@ -80,5 +80,4 @@ def get_metrics(stream_id: str) -> Metrics:
 
 @router.get("/metrics")
 def get_metrics_list() -> list[str]:
-    return ['PrecisionK', 'RecallK', 'NDCGK', 'DCGK', 'HitK']
-
+    return ["PrecisionK", "RecallK", "NDCGK", "DCGK", "HitK"]
