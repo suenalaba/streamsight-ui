@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardSection, Flex, Image, Text, Title } from '@mantine/core';
 
-interface DatasetPageCardProps {
+interface CardWithTopLogoProps {
   title: string;
   description: string;
   imgSrc: string;
@@ -9,7 +9,7 @@ interface DatasetPageCardProps {
   href: string;
 }
 
-const DatasetPageCard = ({ title, description, imgSrc, imgAlt, href }: DatasetPageCardProps) => {
+const CardWithTopLogo = ({ title, description, imgSrc, imgAlt, href }: CardWithTopLogoProps) => {
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder component="a" href={href} target="_blank">
       <CardSection>
@@ -27,4 +27,4 @@ const DatasetPageCard = ({ title, description, imgSrc, imgAlt, href }: DatasetPa
   );
 };
 
-export default DatasetPageCard;
+export default CardWithTopLogo;

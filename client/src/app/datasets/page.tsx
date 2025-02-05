@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { IconPlus, IconTrendingUp } from '@tabler/icons-react';
 import { Button, Divider, Flex, Grid, GridCol, Group, Image, Text, Title } from '@mantine/core';
-import DatasetPageCard from '@/components/Cards/DatasetPageCard';
+import CardWithTopLogo from '@/components/Cards/CardWithTopLogo';
 
 const datasetDescription =
   'Explore and analyze a wide array of datasets available on Streamsight. Some of these datasets are recommended by ACM for RecSys conference. Most are popular benchmarks used in RecSys evaluation and benchmarking.';
@@ -97,7 +97,7 @@ const page = () => {
       <Grid>
         {datasetCards.map((card) => (
           <GridCol span={3} key={card.title}>
-            <DatasetPageCard
+            <CardWithTopLogo
               title={card.title}
               description={card.description}
               imgSrc={card.imgSrc}

@@ -10,7 +10,7 @@ import {
   IconSitemap,
 } from '@tabler/icons-react';
 import { Button, Flex, Grid, Group, Image, Text, Title } from '@mantine/core';
-import WelcomePageCard from '../WelcomePageCard/WelcomePageCard';
+import WelcomePageCard from '../Cards/WelcomePageCard';
 import classes from './Welcome.module.css';
 
 const introductionText =
