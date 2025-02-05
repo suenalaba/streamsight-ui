@@ -19,18 +19,14 @@ import {
   RegisterAlgoFormProvider,
   useRegisterAlgoForm,
 } from '@/components/RegisterAlgoForm/RegisterAlgoFormContext';
-import {
-  AlgorithmUuidToState,
-  MacroMetric,
-  MicroMetric,
-  StreamSettings,
-} from '@/types';
+import { AlgorithmUuidToState, MacroMetric, MicroMetric, StreamSettings } from '@/types';
 import classes from './page.module.css';
 
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
-import { StreamStatusEnum } from '@/enum';
+import StreamStepper from '@/components/Steppers/StreamStepper';
 import { getStatusBadgeProps } from '@/constants';
+import { StreamStatusEnum } from '@/enum';
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
@@ -190,39 +186,46 @@ const page = () => {
   });
 
   const onGridReady = useCallback(() => {
-    getMetrics(streamId).then((metrics) => {
-      if (!metrics) {
-        return;
-      }
-      setMacroTableRowData(metrics.macro_metrics);
-      setMicroTableRowData(metrics.micro_metrics);
-    }).catch((error: unknown) => {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      notifications.show({
-        color: 'red',
-        title: 'Failed to get metrics',
-        message: errorMessage,
-        classNames: classes,
+    getMetrics(streamId)
+      .then((metrics) => {
+        if (!metrics) {
+          return;
+        }
+        setMacroTableRowData(metrics.macro_metrics);
+        setMicroTableRowData(metrics.micro_metrics);
+      })
+      .catch((error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        notifications.show({
+          color: 'red',
+          title: 'Failed to get metrics',
+          message: errorMessage,
+          classNames: classes,
+        });
       });
-    });
   }, []);
 
   return (
     <>
       <Container size="lg" style={{ marginLeft: 0, paddingLeft: 0 }}>
-      <Group justify="space-between">
+        <Group justify="space-between">
           <Title order={3}>
             Stream ID:{' '}
             <Text span variant="gradient" gradient={{ from: '#1c7ed6', to: '#22b8cf' }} inherit>
               {streamId}
             </Text>{' '}
           </Title>
-          <Badge color={statusBadgeProps?.color} size="xl">{statusBadgeProps?.label}</Badge>
-      </Group>
+          <Badge color={statusBadgeProps?.color} size="xl">
+            {statusBadgeProps?.label}
+          </Badge>
+        </Group>
       </Container>
 
       <Container size="lg" style={{ marginLeft: 0, paddingLeft: 0, marginTop: 20 }}>
         <Title order={3}>Algorithm Statuses</Title>
+        <Text c="red">
+          NOTE: All Algorithms have to be predicted before you can advance to the next window.
+        </Text>
         <Table highlightOnHover>
           <Table.Thead>
             <Table.Tr>
@@ -234,8 +237,15 @@ const page = () => {
           <Table.Tbody>{rows}</Table.Tbody>
         </Table>
         <RegisterAlgoFormProvider form={form}>
-          <RegisterAlgoForm streamStatus={streamStatus}/>
+          <RegisterAlgoForm streamStatus={streamStatus} />
         </RegisterAlgoFormProvider>
+      </Container>
+
+      <Container size="lg" style={{ marginLeft: 0, paddingLeft: 0, marginTop: 20 }}>
+        <Title order={3} mb={30}>
+          Stream Progress
+        </Title>
+        <StreamStepper status={streamStatus as StreamStatusEnum} />
       </Container>
 
       <Container size="lg" style={{ marginLeft: 0, paddingLeft: 0, marginTop: 20 }}>
