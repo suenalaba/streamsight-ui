@@ -28,7 +28,7 @@ const GettingStartedCard = ({
 
       <Text size="sm">{description}</Text>
 
-      <Button color="blue" fullWidth mt="md" radius="md" component={Link} href={href}>
+      <Button color="cyan" fullWidth mt="md" radius="md" component={Link} href={href}>
         {buttonText}
       </Button>
     </Card>

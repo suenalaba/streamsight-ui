@@ -7,17 +7,19 @@ const cards = [
     title: 'Full User Flow',
     badgeDescription: 'Popular',
     badgeColor: 'pink',
-    description: 'Find out how to use Streamsight to its full potential',
+    description:
+      'Find out how to use Streamsight to its full potential including the full user flow on how to use Streamsight',
     buttonText: 'Explore more now',
     href: '/full-flow-guide',
   },
   {
     title: 'Settings Configuration',
-    badgeDescription: 'Popular',
-    badgeColor: 'pink',
-    description: 'Find out how to use Streamsight to its full potential',
-    buttonText: 'Explore more now',
-    href: '/settings-configuration',
+    badgeDescription: 'Guide',
+    badgeColor: 'green',
+    description:
+      'Discover the available settings in Streamsight and learn how to configure stream settings in Streamsight to align with your research goals.',
+    buttonText: 'Explore settings configurations',
+    href: '/settings-configuration-guide',
   },
   {
     title: 'Notebooks',

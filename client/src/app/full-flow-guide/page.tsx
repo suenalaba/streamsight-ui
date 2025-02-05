@@ -119,7 +119,7 @@ for metric in response_data["macro_metrics"]:
     print(f"  Metric: {metric['metric']}")
     print(f"  Macro Score: {metric['macro_score']}")
     print(f"  Number of Windows: {metric['num_window']}\n")
-`
+`;
 
 const page = () => {
   return (
@@ -160,10 +160,7 @@ const page = () => {
           </Text>
         </TimelineItem>
 
-        <TimelineItem
-          title="Stream Page"
-          bullet={<IconGitPullRequest size={12} />}
-        >
+        <TimelineItem title="Stream Page" bullet={<IconGitPullRequest size={12} />}>
           <Text c="dimmed" size="sm">
             Check stream settings and register your algorithms at:{' '}
             <Anchor
@@ -190,7 +187,11 @@ const page = () => {
           </Text>
         </TimelineItem>
 
-        <TimelineItem lineVariant="dashed" title="Start Stream" bullet={<IconPlayerPlay size={12} />}>
+        <TimelineItem
+          lineVariant="dashed"
+          title="Start Stream"
+          bullet={<IconPlayerPlay size={12} />}
+        >
           <Text c="dimmed" size="sm">
             Once settings are appropriate and algorithms are registered, start your stream at:{' '}
             <Anchor href="http://localhost:3000/stream" target="_blank" rel="noopener noreferrer">
@@ -251,7 +252,10 @@ const page = () => {
           </Text>
         </TimelineItem>
 
-        <TimelineItem title="Obtainining RecSys Evaluation Metrics" bullet={<IconReportAnalytics size={12} />}>
+        <TimelineItem
+          title="Obtainining RecSys Evaluation Metrics"
+          bullet={<IconReportAnalytics size={12} />}
+        >
           <Text c="dimmed" size="sm">
             Obtain your stream ID and relevant algorithm IDs to configure your localhost.
           </Text>
@@ -263,8 +267,8 @@ const page = () => {
               rel="noopener noreferrer"
             >
               {'http://localhost:3000/stream/{your-stream-id}'}
-            </Anchor>
-            {' '} or you can view the metrics on your localhost with
+            </Anchor>{' '}
+            or you can view the metrics on your localhost with
           </Text>
           <Code color="var(--mantine-color-blue-light)" block>
             {codeForViewingMetrics}
