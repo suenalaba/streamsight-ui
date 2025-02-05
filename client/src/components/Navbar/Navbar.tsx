@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconBrandYoutube, IconHome } from '@tabler/icons-react';
+import { IconBrandYoutube, IconHome, IconSchool } from '@tabler/icons-react';
 import { NavLink } from '@mantine/core';
 
 const Navbar = () => {
@@ -19,6 +19,11 @@ const Navbar = () => {
         <NavLink label="Stream Dashboard" href="/stream" />
         <NavLink label="Create Stream" href="/stream/create" />
       </NavLink>
+      <NavLink
+        href="/getting-started"
+        label="Getting Started"
+        leftSection={<IconSchool size="2rem" stroke={1.5} color="cyan" />}
+      />
     </>
   );
 };
