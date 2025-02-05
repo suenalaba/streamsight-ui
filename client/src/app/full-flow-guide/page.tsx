@@ -213,8 +213,12 @@ const page = () => {
             Configure your localhost with the following code. Here, we assume you have already
             implemented your own algorithm. We use our own Streamsight Algorithm as an example, you
             can find out how to implement yours here:
-            <Anchor href="http://localhost:3000/stream" target="_blank" rel="noopener noreferrer">
-              TODO AT URL IMPLEMENT OWN ALGO
+            <Anchor
+              href="http://localhost:3000/create-algorithm-guide"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              http://localhost:3000/create-algorithm-guide
             </Anchor>
           </Text>
           <Code color="var(--mantine-color-blue-light)" block>
