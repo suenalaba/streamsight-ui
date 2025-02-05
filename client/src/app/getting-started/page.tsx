@@ -11,6 +11,8 @@ const cards = [
       'Find out how to use Streamsight to its full potential including the full user flow on how to use Streamsight',
     buttonText: 'Explore more now',
     href: '/full-flow-guide',
+    imgSrc: '/getting-started/full-flow.jpg',
+    imgAlt: 'Full User Flow',
   },
   {
     title: 'Settings Configuration',
@@ -20,6 +22,8 @@ const cards = [
       'Discover the available settings in Streamsight and learn how to configure stream settings in Streamsight to align with your research goals.',
     buttonText: 'Explore settings configurations',
     href: '/settings-configuration-guide',
+    imgSrc: '/getting-started/settings.jpg',
+    imgAlt: 'Settings Configuration Guide',
   },
   {
     title: 'Notebooks',
@@ -28,14 +32,19 @@ const cards = [
     description: 'Find out how to use Streamsight to its full potential',
     buttonText: 'Explore more now',
     href: '/notebooks',
+    imgSrc: '/getting-started/create-own-algorithm.jpg',
+    imgAlt: 'Create Your Own Algorithm',
   },
   {
     title: 'Create Your Own Algorithm',
-    badgeDescription: 'Popular',
-    badgeColor: 'pink',
-    description: 'Find out how to use Streamsight to its full potential',
-    buttonText: 'Explore more now',
-    href: '/public-api',
+    badgeDescription: 'Guide',
+    badgeColor: 'green',
+    description:
+      'Find out how to create your own RecSys algorithm and integrate it with Streamsight to evaluate your algorithms.',
+    buttonText: 'Create your algorithm now',
+    href: '/create-algorithm-guide',
+    imgSrc: '/getting-started/create-own-algorithm.jpg',
+    imgAlt: 'Create Your Own Algorithm',
   },
 ];
 
@@ -55,6 +64,8 @@ const page = () => {
             description={card.description}
             buttonText={card.buttonText}
             href={card.href}
+            imgSrc={card.imgSrc}
+            imgAlt={card.imgAlt}
           />
         ))}
       </SimpleGrid>
