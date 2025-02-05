@@ -1,6 +1,6 @@
 import React from 'react';
 import { SimpleGrid, Title } from '@mantine/core';
-import GettingStartedCard from '@/components/GettingStartedCard/GettingStartedCard';
+import GettingStartedCard from '@/components/Cards/GettingStartedCard';
 
 const cards = [
   {
@@ -26,14 +26,15 @@ const cards = [
     imgAlt: 'Settings Configuration Guide',
   },
   {
-    title: 'Notebooks',
-    badgeDescription: 'Popular',
-    badgeColor: 'pink',
-    description: 'Find out how to use Streamsight to its full potential',
-    buttonText: 'Explore more now',
+    title: 'Sample Notebooks',
+    badgeDescription: 'Guide',
+    badgeColor: 'green',
+    description:
+      'Learn through example notebooks in Streamsight on how to use Streamsight, and explore the array of algorithms we have implemented.',
+    buttonText: 'Discover sample notebooks',
     href: '/notebooks',
-    imgSrc: '/getting-started/create-own-algorithm.jpg',
-    imgAlt: 'Create Your Own Algorithm',
+    imgSrc: '/getting-started/notebooks.jpg',
+    imgAlt: 'Notebooks',
   },
   {
     title: 'Create Your Own Algorithm',
