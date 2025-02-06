@@ -1448,7 +1448,7 @@ wheels = [
 [[package]]
 name = "streamsight"
 version = "1.0.0"
-source = { git = "https://github.com/suenalaba/streamsightv2.git#9b0c9ca7e8cdc1216453675839888a59842315b0" }
+source = { git = "https://github.com/suenalaba/streamsightv2.git#c9981bc734950db63f68a4ce22964270a412d22e" }
 dependencies = [
     { name = "colorama" },
     { name = "colorlog" },
