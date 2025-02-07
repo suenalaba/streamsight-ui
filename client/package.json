@@ -29,6 +29,7 @@
   "devDependencies": {
     "@eslint/js": "^9.16.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.0",
+    "@playwright/test": "^1.50.1",
     "@types/eslint-plugin-jsx-a11y": "^6.10.0",
     "@types/node": "^20",
     "@types/react": "^19",
