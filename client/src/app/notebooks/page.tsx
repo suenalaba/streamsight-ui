@@ -64,7 +64,7 @@ const page = () => {
         radius="xl"
         leftSection={<IconPlus size={14} />}
         component={Link}
-        href="https://github.com/suenalaba/streamsightv2/issues"
+        href="https://github.com/suenalaba/streamsightv2/pulls"
       >
         New Notebook
       </Button>
