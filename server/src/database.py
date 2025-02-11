@@ -19,7 +19,7 @@ class EvaluatorStreamModel(SQLModel, table=True):
 # SQL Connection
 _engine: Engine = None
 connection_string = (
-    f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}"
+    f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
     if USE_SUPABASE
     else "postgresql://postgres:postgres@localhost:5433/postgres"
 )
