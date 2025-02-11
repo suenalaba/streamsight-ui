@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 from supabase._sync.client import SyncClient
 
-from server.src.settings import SERVER_BASE_URL
+from src.settings import SERVER_BASE_URL
 from src.database import read_db
 from src.supabase_client.authentication import is_user_authenticated
 from src.supabase_client.client import get_supabase_client
