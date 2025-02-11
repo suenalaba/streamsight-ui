@@ -1,5 +1,5 @@
 import { createClient } from '../utils/supabase/client';
-import { BASE_URL } from './constants';
+import { BASE_SERVER_URL } from './constants';
 import { CreateStreamRequest, CreateStreamResponse, GetAllAlgorithmStateResponse, Metrics, RegisterAlgorithmRequest, RegisterAlgorithmResponse, StartStreamResponse, StreamSettings, StreamStatus } from './types';
 
 const getAccessToken = async (): Promise<string | null> => {
@@ -34,7 +34,7 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 };
 
 export const isUserAllowedToAccessStream = async (streamId: string): Promise<boolean> => {
-  return fetchWithAuth(`${BASE_URL}/streams/${streamId}/check_access`, { method: 'GET'});
+  return fetchWithAuth(`${BASE_SERVER_URL}/streams/${streamId}/check_access`, { method: 'GET'});
 }
 
 export const isUserAuthenticated = async (): Promise<boolean> => {
@@ -43,57 +43,57 @@ export const isUserAuthenticated = async (): Promise<boolean> => {
 }
 
 export const getHeroes = async () => {
-  return fetchWithAuth(`${BASE_URL}/authentication/get_heroes`);
+  return fetchWithAuth(`${BASE_SERVER_URL}/authentication/get_heroes`);
 }
 
 export const getStatus = async () => {
-  return fetch(`${BASE_URL}/`);
+  return fetch(`${BASE_SERVER_URL}/`);
 };
 
 export const createStream = async (data: CreateStreamRequest): Promise<CreateStreamResponse> => {
-  return fetchWithAuth(`${BASE_URL}/streams`, {
+  return fetchWithAuth(`${BASE_SERVER_URL}/streams`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
 };
 
 export const getStreamStatus = async (streamId: string): Promise<StreamStatus> => {
-  return fetchWithAuth(`${BASE_URL}/streams/${streamId}/status`, { method: 'GET'});
+  return fetchWithAuth(`${BASE_SERVER_URL}/streams/${streamId}/status`, { method: 'GET'});
 }
 
 export const getUserStreamStatuses = async (): Promise<StreamStatus[]> => {
-  return fetchWithAuth(`${BASE_URL}/streams/user`, { method: 'GET'});
+  return fetchWithAuth(`${BASE_SERVER_URL}/streams/user`, { method: 'GET'});
 }
 
 export const getStreamSettings = async (streamId: string): Promise<StreamSettings> => {
-  return fetchWithAuth(`${BASE_URL}/streams/${streamId}/settings`, { method: 'GET'});
+  return fetchWithAuth(`${BASE_SERVER_URL}/streams/${streamId}/settings`, { method: 'GET'});
 }
 
 export const startStream = async (streamId: string): Promise<StartStreamResponse> => {
-  return fetchWithAuth(`${BASE_URL}/streams/${streamId}/start`, {
+  return fetchWithAuth(`${BASE_SERVER_URL}/streams/${streamId}/start`, {
     method: 'POST',
   });
 }
 
 export const registerAlgorithm = async (streamId: string, data: RegisterAlgorithmRequest): Promise<RegisterAlgorithmResponse> => {
-  return fetchWithAuth(`${BASE_URL}/streams/${streamId}/algorithms`, {
+  return fetchWithAuth(`${BASE_SERVER_URL}/streams/${streamId}/algorithms`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
 }
 
 export const getAlgorithmStates = async (streamId: string): Promise<GetAllAlgorithmStateResponse> => {
-  return fetchWithAuth(`${BASE_URL}/streams/${streamId}/algorithms/state`, { method: 'GET'});
+  return fetchWithAuth(`${BASE_SERVER_URL}/streams/${streamId}/algorithms/state`, { method: 'GET'});
 }
 
 export const getMetrics = async (streamId: string): Promise<Metrics> => {
-  return fetchWithAuth(`${BASE_URL}/streams/${streamId}/metrics`, { method: 'GET'});
+  return fetchWithAuth(`${BASE_SERVER_URL}/streams/${streamId}/metrics`, { method: 'GET'});
 }
 
 export const getMetricsList = async (): Promise<string[]> => {
-  return fetchWithAuth(`${BASE_URL}/metrics`, { method: 'GET'});
+  return fetchWithAuth(`${BASE_SERVER_URL}/metrics`, { method: 'GET'});
 }
 
 export const getDatasets = async (): Promise<string[]> => {
-  return fetchWithAuth(`${BASE_URL}/streams/datasets`, { method: 'GET'});
+  return fetchWithAuth(`${BASE_SERVER_URL}/streams/datasets`, { method: 'GET'});
 }
