@@ -4,7 +4,7 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from scipy.sparse import csr_matrix
-from streamsight.matrix import InteractionMatrix
+from streamsightv2.matrix import InteractionMatrix
 
 from src.utils.db_utils import (
     DatabaseErrorException,

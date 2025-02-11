@@ -1328,7 +1328,7 @@ dependencies = [
     { name = "requests" },
     { name = "ruff" },
     { name = "sqlmodel" },
-    { name = "streamsight" },
+    { name = "streamsightv2" },
     { name = "supabase" },
 ]
 
@@ -1345,7 +1345,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32.3" },
     { name = "ruff", specifier = ">=0.6.9" },
     { name = "sqlmodel", specifier = ">=0.0.22" },
-    { name = "streamsight", git = "https://github.com/suenalaba/streamsightv2.git" },
+    { name = "streamsightv2", specifier = ">=0.1.2" },
     { name = "supabase", specifier = ">=2.9.0" },
 ]
 
@@ -1446,9 +1446,9 @@ wheels = [
 ]
 
 [[package]]
-name = "streamsight"
-version = "1.0.0"
-source = { git = "https://github.com/suenalaba/streamsightv2.git#c9981bc734950db63f68a4ce22964270a412d22e" }
+name = "streamsightv2"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama" },
     { name = "colorlog" },
@@ -1463,6 +1463,10 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
     { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d1/9a/7a1ce5418df8f312c71bc9e246e9480807748642a2b3b7d8de29fd263363/streamsightv2-0.1.2.tar.gz", hash = "sha256:477e6c7c18fcc4fb9a06931c146fe15310ae935bbf3e8ab256047f93cea5eadb", size = 76872 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/32/c4/4516f0b2ab3d31295ec6420adbf569040dda06e43ea2c419e658cc850ea1/streamsightv2-0.1.2-py3-none-any.whl", hash = "sha256:76353d140eda93ffc186b920279e4c54b86bdcf87c19069b6b9c0277d98304de", size = 113016 },
 ]
 
 [[package]]

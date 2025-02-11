@@ -11,7 +11,7 @@ import {
 } from '@tabler/icons-react';
 import { Anchor, Code, Divider, Image, Text, Timeline, TimelineItem, Title } from '@mantine/core';
 
-const codeForConfiguringLocalHost = `from streamsight.algorithms import ItemKNNIncremental
+const codeForConfiguringLocalHost = `from streamsightv2.algorithms import ItemKNNIncremental
 
 external_model = ItemKNNIncremental(K=2)
 
@@ -32,7 +32,7 @@ response = requests.get(url)
 training_df = pd.DataFrame(response.json().get('training_data'))
 shape = response.json().get('shape')
 
-from streamsight.matrix import InteractionMatrix
+from streamsightv2.matrix import InteractionMatrix
 # construct the interaction matrix
 training_im = InteractionMatrix(training_df, item_ix='iid', user_ix='uid', timestamp_ix='ts', shape=shape)
 

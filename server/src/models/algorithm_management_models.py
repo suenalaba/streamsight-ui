@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from streamsight.registries import AlgorithmStateEnum
+from streamsightv2.registries import AlgorithmStateEnum
 
 
 class AlgorithmRegistrationRequest(BaseModel):
