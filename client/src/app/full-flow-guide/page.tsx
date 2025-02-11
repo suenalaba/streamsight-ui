@@ -10,6 +10,7 @@ import {
   IconReportAnalytics,
 } from '@tabler/icons-react';
 import { Anchor, Code, Divider, Image, Text, Timeline, TimelineItem, Title } from '@mantine/core';
+import { BASE_URL } from '@/constants';
 
 const codeForConfiguringLocalHost = `from streamsightv2.algorithms import ItemKNNIncremental
 
@@ -137,12 +138,8 @@ const page = () => {
         <TimelineItem bullet={<IconGitBranch size={12} />} title="Create Stream">
           <Text c="dimmed" size="sm">
             Configure your settings at:{' '}
-            <Anchor
-              href="http://localhost:3000/stream/create"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              http://localhost:3000/stream/create
+            <Anchor href={`${BASE_URL}/stream/create`} target="_blank" rel="noopener noreferrer">
+              {`${BASE_URL}/stream/create`}
             </Anchor>
           </Text>
           <Text size="xs" mt={4}>
@@ -164,11 +161,11 @@ const page = () => {
           <Text c="dimmed" size="sm">
             Check stream settings and register your algorithms at:{' '}
             <Anchor
-              href="http://localhost:3000/stream/{your-stream-id}"
+              href={`${BASE_URL}/stream/{your-stream-id}`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              {'http://localhost:3000/stream/{your-stream-id}'}
+              {`${BASE_URL}/stream/{your-stream-id}`}
             </Anchor>
           </Text>
           <Text size="xs" mt={4}>
@@ -194,8 +191,8 @@ const page = () => {
         >
           <Text c="dimmed" size="sm">
             Once settings are appropriate and algorithms are registered, start your stream at:{' '}
-            <Anchor href="http://localhost:3000/stream" target="_blank" rel="noopener noreferrer">
-              http://localhost:3000/stream
+            <Anchor href={`${BASE_URL}/stream`} target="_blank" rel="noopener noreferrer">
+              {`${BASE_URL}/stream`}
             </Anchor>
           </Text>
           <Image src="/full-stream-flow-guide/step5.png" alt="Start Stream" />
@@ -214,11 +211,11 @@ const page = () => {
             implemented your own algorithm. We use our own Streamsight Algorithm as an example, you
             can find out how to implement yours here:
             <Anchor
-              href="http://localhost:3000/create-algorithm-guide"
+              href={`${BASE_URL}/create-algorithm-guide`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              http://localhost:3000/create-algorithm-guide
+              {`${BASE_URL}/create-algorithm-guide`}
             </Anchor>
           </Text>
           <Code color="var(--mantine-color-blue-light)" block>
@@ -266,11 +263,11 @@ const page = () => {
           <Text c="dimmed" size="sm">
             Once the stream is completed you can view your metrics on our dashboard at:{' '}
             <Anchor
-              href="http://localhost:3000/stream/{your-stream-id}"
+              href={`${BASE_URL}/stream/{your-stream-id}`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              {'http://localhost:3000/stream/{your-stream-id}'}
+              {`${BASE_URL}/stream/{your-stream-id}`}
             </Anchor>{' '}
             or you can view the metrics on your localhost with
           </Text>
