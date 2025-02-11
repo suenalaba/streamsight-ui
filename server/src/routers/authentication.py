@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 from supabase._sync.client import SyncClient
 
+from server.src.settings import SERVER_BASE_URL
 from src.database import read_db
 from src.supabase_client.authentication import is_user_authenticated
 from src.supabase_client.client import get_supabase_client
@@ -17,19 +18,20 @@ def callback(
 ):
     try:
         supabase_client.auth.exchange_code_for_session({"auth_code": code})
-        return RedirectResponse(url="http://localhost:8000/docs")
+        return RedirectResponse(url=SERVER_BASE_URL + "/docs")
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error in callback: " + str(e))
 
 
 @router.post("/authentication/sign_in")
 def sign_in(supabase_client: Annotated[SyncClient, Depends(get_supabase_client)]):
+    redirect_url = SERVER_BASE_URL + "/authentication/callback"
     try:
         response = supabase_client.auth.sign_in_with_oauth(
             {
                 "provider": "google",
                 "options": {
-                    "redirect_to": "http://localhost:8000/authentication/callback"
+                    "redirect_to": redirect_url,
                 },
             }
         )
