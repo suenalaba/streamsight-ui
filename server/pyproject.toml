@@ -16,9 +16,6 @@ dependencies = [
     "requests>=2.32.3",
     "ruff>=0.6.9",
     "sqlmodel>=0.0.22",
-    "streamsight",
+    "streamsightv2>=0.1.2",
     "supabase>=2.9.0",
 ]
-
-[tool.uv.sources]
-streamsight = { git = "https://github.com/suenalaba/streamsightv2.git" }

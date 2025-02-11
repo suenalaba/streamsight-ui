@@ -3,7 +3,7 @@ import uuid
 from typing import Tuple
 
 from sqlmodel import Session, select
-from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
+from streamsightv2.evaluators.evaluator_stream import EvaluatorStreamer
 
 from src.database import EvaluatorStreamModel, get_sql_connection
 

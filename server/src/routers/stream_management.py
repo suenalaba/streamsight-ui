@@ -3,7 +3,7 @@ from typing import Annotated, List, cast
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from streamsight.datasets import (
+from streamsightv2.datasets import (
     AmazonBookDataset,
     AmazonMovieDataset,
     AmazonMusicDataset,
@@ -13,9 +13,9 @@ from streamsight.datasets import (
     TestDataset,
     YelpDataset,
 )
-from streamsight.evaluators.evaluator_stream import EvaluatorStreamer
-from streamsight.registries.registry import MetricEntry
-from streamsight.settings import SlidingWindowSetting
+from streamsightv2.evaluators.evaluator_stream import EvaluatorStreamer
+from streamsightv2.registries.registry import MetricEntry
+from streamsightv2.settings import SlidingWindowSetting
 
 from src.models.stream_management_models import (
     CreateStreamResponse,

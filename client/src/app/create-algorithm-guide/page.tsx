@@ -2,7 +2,7 @@ import React from 'react';
 import { Anchor, Code, Divider, Image, Text, Title } from '@mantine/core';
 
 const codeForOwnAlgorithmBoilerPlate = `# all algorithms should inherit from the Algorithm class
-from streamsight.algorithms.base import Algorithm
+from streamsightv2.algorithms.base import Algorithm
 
 class YourOwnAlgorithm(Algorithm):
     """Create your own algorithm
