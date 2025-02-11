@@ -1,0 +1,10 @@
+.env
+.pytest_cache
+.ruff_cache
+.venv
+data
+htmlcov
+log
+tests
+.coverage
+

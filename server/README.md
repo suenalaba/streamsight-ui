@@ -4,28 +4,28 @@
 
 **Pre-requisite**:
 1. Change directory to the root of the project and ensure that you are in the `server` directory
-```
+```bash
 cd server
 ```
 2. Our project is managed using [astral-uv](https://docs.astral.sh/uv/) ensure you have uv installed via:
-```
+```bash
 pip install uv
 ```
 - Check out alternative installation options [here](https://docs.astral.sh/uv/getting-started/installation/)
 3. After installing uv, install dependencies using:
-```
+```bash
 uv sync --all-extras
 ```
 - NOTE: This command will automatically create a virtual environment in the `.venv` folder.
 4. Run the following command and fill in the empty `.env` details
-```
+```bash
 cp .env.example .env
 ```
 5. Run `source .venv/bin/activate
 
 ### Development
 1. Run
-```
+```bash
 uv run fastapi dev src/main.py
 ```
 2. Check health via: http://127.0.0.1:8000
@@ -34,31 +34,43 @@ uv run fastapi dev src/main.py
 ### Migrations
 - For updating database with additional data attributes
 1. In root directory run 
-```
+```bash
 uv run python3 -m migrations.scripts.<script_name>
+```
+
+### Running server with docker:
+1. In your terminal run:
+```bash
+docker compose up --build -d
+```
+2. Check health via: http://127.0.0.1:8000
+3. Access OPENAPI Spec via: http://127.0.0.1:8000/docs
+4. After you are done:
+```bash
+docker compose down
 ```
 
 ### Testing
 * To run test in streamlined mode:
-```
+```bash
 uv run pytest
 ```
 
 * To run test and include Verbose:
-```
+```bash
 uv run pytest -s -vv
 ```
 * To obtain test coverage:
 1. To compile coverage, run:
-```
+```bash
 uv run coverage run -m pytest
 ```
 2. To get report in terminal, run:
-```
+```bash
 uv run coverage report -m
 ```
 3. To get a more comprehensive report, run:
-```
+```bash
 uv run coverage html
 ```
 and open htmlcov/index.html in a web browser.
