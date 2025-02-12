@@ -9,7 +9,17 @@ import {
   IconPlayerPlay,
   IconReportAnalytics,
 } from '@tabler/icons-react';
-import { Anchor, Code, Divider, Image, Text, Timeline, TimelineItem, Title } from '@mantine/core';
+import {
+  Anchor,
+  Box,
+  Code,
+  Divider,
+  Image,
+  Text,
+  Timeline,
+  TimelineItem,
+  Title,
+} from '@mantine/core';
 import { BASE_CLIENT_URL } from '@/constants';
 
 const codeForConfiguringLocalHost = `from streamsightv2.algorithms import ItemKNNIncremental
@@ -128,6 +138,9 @@ const page = () => {
       <Title order={1} mb={20}>
         How To Use Streamsight
       </Title>
+      <Box style={{ overflowX: 'auto', width: '100%' }}>
+        <Image src="/full-stream-flow-guide/full_flow.png" alt="Full User Flow" h={574} w={2895} />
+      </Box>
       <Divider my="md" />
       <Title order={3} mb={20}>
         Full User Flow
@@ -138,7 +151,11 @@ const page = () => {
         <TimelineItem bullet={<IconGitBranch size={12} />} title="Create Stream">
           <Text c="dimmed" size="sm">
             Configure your settings at:{' '}
-            <Anchor href={`${BASE_CLIENT_URL}/stream/create`} target="_blank" rel="noopener noreferrer">
+            <Anchor
+              href={`${BASE_CLIENT_URL}/stream/create`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {`${BASE_CLIENT_URL}/stream/create`}
             </Anchor>
           </Text>
