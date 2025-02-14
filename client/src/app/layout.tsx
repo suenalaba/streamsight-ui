@@ -25,8 +25,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <title>Streamsight</title>
-      <meta name="Streamsight" content="Toolkit for offline evaluation of recommender system." />
       <head>
+        <meta name="Streamsight" content="Toolkit for offline evaluation of recommender system." />
         <ColorSchemeScript />
       </head>
       <body>
