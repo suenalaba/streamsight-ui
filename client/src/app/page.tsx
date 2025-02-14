@@ -34,7 +34,9 @@ export default function Home() {
     <>
       <Welcome />
       <Text>{`Healthcheck status: ${status}`}</Text>
-      <Button onClick={fetchHeroes}>Fetch heroes from supabase</Button>
+      <Button color="rgba(0, 61, 245, 1)" onClick={fetchHeroes}>
+        Fetch heroes from supabase
+      </Button>
     </>
   );
 }
