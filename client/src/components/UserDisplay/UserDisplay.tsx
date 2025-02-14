@@ -1,3 +1,5 @@
+'use client';
+
 import { forwardRef, useEffect } from 'react';
 import { IconChevronRight, IconLogout } from '@tabler/icons-react';
 import { Avatar, Button, Group, Menu, rem, Text, UnstyledButton } from '@mantine/core';

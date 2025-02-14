@@ -1,4 +1,4 @@
-'use client';
+// 'use client';
 
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
@@ -21,12 +21,16 @@ import { AuthProvider } from '@/providers/AuthProvider';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+export const metadata = {
+  title: 'Streamsight',
+  description: 'Toolkit for offline evaluation of recommender system.',
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <title>Streamsight</title>
       <head>
-        <meta name="Streamsight" content="Toolkit for offline evaluation of recommender system." />
         <ColorSchemeScript />
       </head>
       <body>
