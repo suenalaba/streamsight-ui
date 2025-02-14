@@ -1,9 +1,9 @@
 import { forwardRef, useEffect } from 'react';
 import { IconChevronRight, IconLogout } from '@tabler/icons-react';
 import { Avatar, Button, Group, Menu, rem, Text, UnstyledButton } from '@mantine/core';
-import { useAuth } from '../../providers/AuthProvider';
-import { login } from '../../login';
 import { createClient } from '../../../utils/supabase/client';
+import { login } from '../../login';
+import { useAuth } from '../../providers/AuthProvider';
 
 interface UserButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   image: string;
@@ -87,7 +87,7 @@ const UserDisplay = () => {
           </Menu.Dropdown>
         </Menu>
       ) : (
-        <Button onClick={login} variant="filled">
+        <Button onClick={login} variant="filled" color="rgba(0, 61, 245, 1)">
           Login
         </Button>
       )}
