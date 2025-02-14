@@ -1,6 +1,8 @@
+'use client';
+
 import { createContext, ReactNode, useContext, useState } from 'react';
-import { createClient } from '../../utils/supabase/client';
 import { redirect } from 'next/navigation';
+import { createClient } from '../../utils/supabase/client';
 
 interface AuthContextType {
   userEmail: string | null;
