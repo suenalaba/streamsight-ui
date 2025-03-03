@@ -19,3 +19,14 @@ dependencies = [
     "streamsightv2>=0.1.2",
     "supabase>=2.9.0",
 ]
+
+[tool.coverage.run]
+omit = [
+    # omit coverage of tests directory
+    "*/tests/*",
+    # # omit DAO files as these are covered by E2E tests
+    "database.py",
+    "db_utils.py",
+    # omit supabase files as these are covered by E2E tests
+    "*/supabase_client/*",
+]
