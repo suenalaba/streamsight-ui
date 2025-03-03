@@ -8,6 +8,7 @@ data/
 
 # ignore logs
 log/
+logs/
 LOGGING_CONFIG.yaml
 
 # ignore generated test reports
