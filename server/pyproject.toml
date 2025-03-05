@@ -16,7 +16,7 @@ dependencies = [
     "requests>=2.32.3",
     "ruff>=0.6.9",
     "sqlmodel>=0.0.22",
-    "streamsightv2>=0.1.2",
+    "streamsightv2>=0.1.4",
     "supabase>=2.9.0",
 ]
 
