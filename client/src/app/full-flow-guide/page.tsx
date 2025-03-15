@@ -34,7 +34,7 @@ algorithm_id = "bdd640fb-0667-4ad1-9c80-317fa3b1799d"
 const codeForFittingTrainingData = `import requests
 
 # Define the base URL and endpoint
-base_url = "http://https://streamsight-server.onrender.com"
+base_url = "https://streamsight-server.onrender.com"
 endpoint = "/streams/{stream_id}/algorithms/{algorithm_id}/training-data"
 
 # Construct the full URL to get training data
