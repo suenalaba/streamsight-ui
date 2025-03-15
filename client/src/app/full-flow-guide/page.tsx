@@ -34,7 +34,7 @@ algorithm_id = "bdd640fb-0667-4ad1-9c80-317fa3b1799d"
 const codeForFittingTrainingData = `import requests
 
 # Define the base URL and endpoint
-base_url = "http://localhost:8000"
+base_url = "http://https://streamsight-server.onrender.com"
 endpoint = "/streams/{stream_id}/algorithms/{algorithm_id}/training-data"
 
 # Construct the full URL to get training data
@@ -54,7 +54,7 @@ external_model.fit(training_im)
 const codeForPredictingUnlabeledData = `import requests
 
 # Define the base URL and endpoint
-base_url = "http://localhost:8000"
+base_url = "https://streamsight-server.onrender.com"
 endpoint = "/streams/{stream_id}/algorithms/{algorithm_id}/unlabeled-data"
 
 # Construct the full URL to get unlabeled data
@@ -81,7 +81,7 @@ matrix_dict = {
 import requests
 
 # Define the base URL and endpoint
-base_url = "http://localhost:8000"
+base_url = "https://streamsight-server.onrender.com"
 endpoint = "/streams/{stream_id}/algorithms/{algorithm_id}/predictions"
 
 # Construct the full URL for submitting predictions
@@ -94,7 +94,7 @@ response = requests.post(url, json=matrix_dict)
 const codeForCheckingIfStreamIsCompleted = `import requests
 
 # Define the base URL and endpoint
-base_url = "http://localhost:8000"
+base_url = "https://streamsight-server.onrender.com"
 endpoint = "/streams/{stream_id}/algorithms/{algorithm_id}/is-completed"
 
 # Construct the full URL to check if stream is completed
@@ -107,7 +107,7 @@ print(response.content)
 const codeForViewingMetrics = `import requests
 
 # Define the base URL and endpoint
-base_url = "http://localhost:8000"
+base_url = "https://streamsight-server.onrender.com"
 endpoint = "/streams/{stream_id}/metrics"
 
 # Construct the full URL to get metrics
