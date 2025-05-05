@@ -101,7 +101,7 @@ const modelCards = [
     imgSrc:
       'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/avatars/avatar-5.png',
     imgAlt: 'Avatar',
-    href: 'https://github.com/suenalaba/streamsightv2/blob/master/streamsight/algorithms/baseline.py',
+    href: 'https://github.com/suenalaba/streamsightv2/blob/master/streamsightv2/algorithms/recent_popularity.py',
     icon: <IconPercentage30 size={20} />,
   },
   {
@@ -110,7 +110,7 @@ const modelCards = [
     imgSrc:
       'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/avatars/avatar-2.png',
     imgAlt: 'Avatar',
-    href: 'https://github.com/suenalaba/streamsightv2/blob/master/streamsight/algorithms/baseline.py',
+    href: 'https://github.com/suenalaba/streamsightv2/blob/master/streamsightv2/algorithms/decay_popularity.py',
     icon: <IconNumber10Small size={20} />,
   },
   {
@@ -119,7 +119,7 @@ const modelCards = [
     imgSrc:
       'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/avatars/avatar-4.png',
     imgAlt: 'Avatar',
-    href: 'https://github.com/suenalaba/streamsightv2/blob/master/streamsight/algorithms/itemknn_incremental.py',
+    href: 'https://github.com/suenalaba/streamsightv2/blob/master/streamsightv2/algorithms/itemknn_incremental.py',
     icon: <IconSitemap size={20} />,
   },
   {
@@ -128,7 +128,7 @@ const modelCards = [
     imgSrc:
       'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/avatars/avatar-9.png',
     imgAlt: 'Avatar',
-    href: 'https://github.com/suenalaba/streamsightv2/blob/master/streamsight/algorithms/itemknn_incremental.py',
+    href: 'https://github.com/suenalaba/streamsightv2/blob/master/streamsightv2/algorithms/itemknn_incremental.py',
     icon: <IconFileDatabase size={20} />,
   },
 ];
@@ -214,7 +214,7 @@ export function Welcome() {
 
         <Button
           component={Link}
-          href="https://github.com/suenalaba/streamsightv2/tree/master/streamsight/datasets"
+          href="https://github.com/suenalaba/streamsightv2/tree/master/streamsightv2/datasets"
           variant="subtle"
           color="black"
           radius="xl"
@@ -286,7 +286,7 @@ export function Welcome() {
 
         <Button
           component={Link}
-          href="https://github.com/suenalaba/streamsightv2/tree/master/streamsight/algorithms"
+          href="https://github.com/suenalaba/streamsightv2/tree/master/streamsightv2/algorithms"
           variant="subtle"
           color="black"
           radius="xl"

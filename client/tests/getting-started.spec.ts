@@ -91,7 +91,7 @@ test.describe('Getting Started Tab', () => {
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
       const createOwnAlgoLink = page.getByRole('link', {
-        name: 'https://github.com/suenalaba/streamsightv2/tree/master/streamsight/algorithms',
+        name: 'https://github.com/suenalaba/streamsightv2/tree/master/streamsightv2/algorithms',
       });
       await expect(createOwnAlgoLink).toBeVisible();
       const pagePromise = context.waitForEvent('page');
@@ -100,7 +100,7 @@ test.describe('Getting Started Tab', () => {
       const newPage = await pagePromise;
 
       await expect(newPage).toHaveURL(
-        'https://github.com/suenalaba/streamsightv2/tree/master/streamsight/algorithms'
+        'https://github.com/suenalaba/streamsightv2/tree/master/streamsightv2/algorithms'
       );
     });
   });
