@@ -59,11 +59,11 @@ const page = () => {
         If you need some inspiration, you can check out the algorithms that are already implemented
         in Streamsight. You can find them here:{' '}
         <Anchor
-          href="https://github.com/suenalaba/streamsightv2/tree/master/streamsight/algorithms"
+          href="https://github.com/suenalaba/streamsightv2/tree/master/streamsightv2/algorithms"
           target="_blank"
           rel="noopener noreferrer"
         >
-          https://github.com/suenalaba/streamsightv2/tree/master/streamsight/algorithms
+          https://github.com/suenalaba/streamsightv2/tree/master/streamsightv2/algorithms
         </Anchor>
       </Text>
     </>
